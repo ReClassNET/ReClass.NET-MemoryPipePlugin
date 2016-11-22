@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="MemoryStream.cpp" />
+    <ClCompile Include="BinaryWriter.cpp" />
+    <ClCompile Include="BinaryReader.cpp" />
+    <ClCompile Include="PipeStream.cpp" />
+    <ClCompile Include="NamedPipeServerStream.cpp" />
+    <ClCompile Include="MessageClient.cpp" />
+    <ClCompile Include="Messages.cpp" />
+    <ClCompile Include="MemoryHelper.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Stream.hpp" />
+    <ClInclude Include="MemoryStream.hpp" />
+    <ClInclude Include="Exceptions.hpp" />
+    <ClInclude Include="BinaryWriter.hpp" />
+    <ClInclude Include="BinaryReader.hpp" />
+    <ClInclude Include="SafeHandle.hpp" />
+    <ClInclude Include="PipeStream.hpp" />
+    <ClInclude Include="NamedPipeServerStream.hpp" />
+    <ClInclude Include="Messages.hpp" />
+    <ClInclude Include="MessageClient.hpp" />
+  </ItemGroup>
+</Project>
