@@ -169,7 +169,7 @@ void EnumerateRemoteSectionsAndModules(const std::function<void(const void*, con
 	auto ldr = reinterpret_cast<LDR_MODULE*>(peb->LoaderData->InLoadOrderModuleList.Flink);
 	while (ldr->BaseAddress != nullptr)
 	{
-		moduleCallback(ldr->BaseAddress, (const void*)ldr->SizeOfImage, ldr->FullDllName.Buffer);
+		moduleCallback(ldr->BaseAddress, (const void*)(intptr_t)ldr->SizeOfImage, ldr->FullDllName.Buffer);
 
 		auto it = std::lower_bound(std::begin(sections), std::end(sections), ldr->BaseAddress, [&sections](const SectionInfo& lhs, const LPVOID& rhs)
 		{
