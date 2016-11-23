@@ -180,7 +180,7 @@ bool MemoryStream::EnsureCapacity(int value)
 
 		if ((unsigned int)(capacity * 2) > MaxByteArrayLength)
 		{
-			newCapacity = value > MaxByteArrayLength ? value : MaxByteArrayLength;
+			newCapacity = (unsigned int)value > MaxByteArrayLength ? value : MaxByteArrayLength;
 		}
 
 		SetCapacity(newCapacity);

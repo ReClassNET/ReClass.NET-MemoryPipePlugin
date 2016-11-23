@@ -182,7 +182,7 @@ void EnumerateRemoteSectionsAndModules(const std::function<void(const void*, con
 		int i = 0;
 		for (auto sectionHeader = IMAGE_FIRST_SECTION(ntHeader); i < ntHeader->FileHeader.NumberOfSections; i++, sectionHeader++)
 		{
-			auto sectionAddress = (intptr_t)ldr->BaseAddress + sectionHeader->VirtualAddress;
+			auto sectionAddress = (intptr_t)ldr->BaseAddress + (intptr_t)sectionHeader->VirtualAddress;
 			for (auto j = it; j != std::end(sections); ++j)
 			{
 				if (sectionAddress >= (intptr_t)j->BaseAddress && sectionAddress < (intptr_t)j->BaseAddress + (intptr_t)j->RegionSize)
