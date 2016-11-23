@@ -28,7 +28,7 @@ namespace MemoryPipePlugin
 		{
 			Contract.Requires(host != null);
 
-			System.Diagnostics.Debugger.Launch();
+			//System.Diagnostics.Debugger.Launch();
 
 			if (MemoryPipePluginExt.host != null)
 			{
@@ -97,7 +97,7 @@ namespace MemoryPipePlugin
 		/// ]]></remarks>
 		/// <param name="process">The process to check.</param>
 		/// <returns>True if the process is valid, false if not.</returns>
-		[DllExport(CallingConvention = CallingConvention.Cdecl)]
+		[DllExport(CallingConvention = CallingConvention.StdCall)]
 		public static bool IsProcessValid(IntPtr process)
 		{
 			lock (sync)
@@ -131,7 +131,7 @@ namespace MemoryPipePlugin
 		/// <param name="pid">The process id.</param>
 		/// <param name="desiredAccess">The desired access. (ignored)</param>
 		/// <returns>A plugin internal handle to the process.</returns>
-		[DllExport(CallingConvention = CallingConvention.Cdecl)]
+		[DllExport(CallingConvention = CallingConvention.StdCall)]
 		private static IntPtr OpenRemoteProcess(int pid, int desiredAccess)
 		{
 			lock (sync)
@@ -195,7 +195,7 @@ namespace MemoryPipePlugin
 		/// <- StatusMessage
 		/// ]]></remarks>
 		/// <param name="process">The process to close.</param>
-		[DllExport(CallingConvention = CallingConvention.Cdecl)]
+		[DllExport(CallingConvention = CallingConvention.StdCall)]
 		private static void CloseRemoteProcess(IntPtr process)
 		{
 			lock (sync)
@@ -232,7 +232,7 @@ namespace MemoryPipePlugin
 		/// <param name="buffer">The buffer to read into.</param>
 		/// <param name="size">The size of the memory to read.</param>
 		/// <returns>True if it succeeds, false if it fails.</returns>
-		[DllExport(CallingConvention = CallingConvention.Cdecl)]
+		[DllExport(CallingConvention = CallingConvention.StdCall)]
 		private static bool ReadRemoteMemory(IntPtr process, IntPtr address, IntPtr buffer, int size)
 		{
 			lock (sync)
@@ -281,7 +281,7 @@ namespace MemoryPipePlugin
 		/// <param name="buffer">The memory to write.</param>
 		/// <param name="size">The size of the memory to write.</param>
 		/// <returns>True if it succeeds, false if it fails.</returns>
-		[DllExport(CallingConvention = CallingConvention.Cdecl)]
+		[DllExport(CallingConvention = CallingConvention.StdCall)]
 		private static bool WriteRemoteMemory(IntPtr process, IntPtr address, IntPtr buffer, int size)
 		{
 			lock (sync)
@@ -310,7 +310,7 @@ namespace MemoryPipePlugin
 
 		/// <summary>Enumerates all pipes started by the ReClass.NET PipeServer.</summary>
 		/// <param name="callbackProcess">The callback which gets called for every process.</param>
-		[DllExport(CallingConvention = CallingConvention.Cdecl)]
+		[DllExport(CallingConvention = CallingConvention.StdCall)]
 		private static void EnumerateProcesses(EnumerateProcessCallback callbackProcess)
 		{
 			if (callbackProcess == null)
@@ -345,7 +345,7 @@ namespace MemoryPipePlugin
 		/// <param name="process">The process.</param>
 		/// <param name="callbackSection">The callback which gets called for every section.</param>
 		/// <param name="callbackModule">The callback which gets called for every module.</param>
-		[DllExport(CallingConvention = CallingConvention.Cdecl)]
+		[DllExport(CallingConvention = CallingConvention.StdCall)]
 		private static void EnumerateRemoteSectionsAndModules(IntPtr process, EnumerateRemoteSectionCallback callbackSection, EnumerateRemoteModuleCallback callbackModule)
 		{
 			if (callbackSection == null && callbackModule == null)
