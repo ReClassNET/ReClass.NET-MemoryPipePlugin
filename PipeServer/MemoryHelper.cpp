@@ -86,33 +86,24 @@ void EnumerateRemoteSectionsAndModules(const std::function<void(const void*, con
 	};
 	std::vector<SectionInfo> sections;
 
-	SYSTEM_INFO sysInfo;
-	GetSystemInfo(&sysInfo);
-
 	// First enumerate all memory sections.
-	MEMORY_BASIC_INFORMATION memInfo;
-	size_t address = (size_t)sysInfo.lpMinimumApplicationAddress;
-	while (address < (size_t)sysInfo.lpMaximumApplicationAddress)
+	MEMORY_BASIC_INFORMATION memInfo = { 0 };
+	memInfo.RegionSize = 0x1000;
+	size_t address = 0;
+	while (VirtualQuery((LPCVOID)address, &memInfo, sizeof(MEMORY_BASIC_INFORMATION)) != 0 && address + memInfo.RegionSize > address)
 	{
-		if (VirtualQuery((LPCVOID)address, &memInfo, sizeof(MEMORY_BASIC_INFORMATION)) != 0)
+		if (memInfo.State == MEM_COMMIT)
 		{
-			if (memInfo.State == MEM_COMMIT /*&& memInfo.Type == MEM_PRIVATE*/)
-			{
-				SectionInfo section = {};
-				section.BaseAddress = memInfo.BaseAddress;
-				section.RegionSize = memInfo.RegionSize;
-				section.State = memInfo.State;
-				section.Protection = memInfo.Protect;
-				section.Type = memInfo.Type;
+			SectionInfo section = {};
+			section.BaseAddress = memInfo.BaseAddress;
+			section.RegionSize = memInfo.RegionSize;
+			section.State = memInfo.State;
+			section.Protection = memInfo.Protect;
+			section.Type = memInfo.Type;
 
-				sections.push_back(std::move(section));
-			}
-			address = (ULONG_PTR)memInfo.BaseAddress + memInfo.RegionSize;
+			sections.push_back(std::move(section));
 		}
-		else
-		{
-			address += 1024;
-		}
+		address = (size_t)memInfo.BaseAddress + memInfo.RegionSize;
 	}
 
 	struct UNICODE_STRING
