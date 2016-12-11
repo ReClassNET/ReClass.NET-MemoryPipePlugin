@@ -43,7 +43,7 @@ void MessageClient::Send(const IMessage& message)
 	MemoryStream ms;
 	BinaryWriter bw(ms);
 
-	bw.Write(message.GetType());
+	bw.Write(message.GetMessageType());
 	message.WriteTo(bw);
 
 	auto data = ms.ToArray();

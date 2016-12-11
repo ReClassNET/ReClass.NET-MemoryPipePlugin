@@ -2,6 +2,8 @@
 
 #include <string>
 
+#include "ReClassNET_Plugin.hpp"
+
 #include "BinaryReader.hpp"
 #include "BinaryWriter.hpp"
 
@@ -10,7 +12,7 @@ class MessageClient;
 class IMessage
 {
 public:
-	virtual int GetType() const = 0;
+	virtual int GetMessageType() const = 0;
 
 	virtual void ReadFrom(BinaryReader& br) = 0;
 	virtual void WriteTo(BinaryWriter& bw) const = 0;
@@ -24,8 +26,8 @@ public:
 class StatusMessage : public IMessage
 {
 public:
-	static const int StaticType = 1;
-	virtual int GetType() const override { return StaticType; }
+	static const int StaticMessageType = 1;
+	virtual int GetMessageType() const override { return StaticMessageType; }
 
 	bool GetSuccess() const { return success; }
 
@@ -58,8 +60,8 @@ private:
 class OpenProcessMessage : public IMessage
 {
 public:
-	static const int StaticType = 2;
-	virtual int GetType() const override { return StaticType; }
+	static const int StaticMessageType = 2;
+	virtual int GetMessageType() const override { return StaticMessageType; }
 
 	virtual void ReadFrom(BinaryReader& reader) override
 	{
@@ -77,8 +79,8 @@ public:
 class CloseProcessMessage : public IMessage
 {
 public:
-	static const int StaticType = 3;
-	virtual int GetType() const override { return StaticType; }
+	static const int StaticMessageType = 3;
+	virtual int GetMessageType() const override { return StaticMessageType; }
 
 	virtual void ReadFrom(BinaryReader& reader) override
 	{
@@ -96,8 +98,8 @@ public:
 class IsValidMessage : public IMessage
 {
 public:
-	static const int StaticType = 4;
-	virtual int GetType() const override { return StaticType; }
+	static const int StaticMessageType = 4;
+	virtual int GetMessageType() const override { return StaticMessageType; }
 
 	virtual void ReadFrom(BinaryReader& reader) override
 	{
@@ -115,8 +117,8 @@ public:
 class ReadMemoryMessage : public IMessage
 {
 public:
-	static const int StaticType = 5;
-	virtual int GetType() const override { return StaticType; }
+	static const int StaticMessageType = 5;
+	virtual int GetMessageType() const override { return StaticMessageType; }
 
 	const void* GetAddress() const { return address; }
 	const int GetSize() const { return size; }
@@ -157,8 +159,8 @@ private:
 class ReadMemoryDataMessage : public IMessage
 {
 public:
-	static const int StaticType = 6;
-	virtual int GetType() const override { return StaticType; }
+	static const int StaticMessageType = 6;
+	virtual int GetMessageType() const override { return StaticMessageType; }
 
 	const std::vector<uint8_t>& GetData() const { return data; }
 
@@ -192,8 +194,8 @@ private:
 class WriteMemoryMessage : public IMessage
 {
 public:
-	static const int StaticType = 7;
-	virtual int GetType() const override { return StaticType; }
+	static const int StaticMessageType = 7;
+	virtual int GetMessageType() const override { return StaticMessageType; }
 
 	const void* GetAddress() const { return address; }
 	const std::vector<uint8_t>& GetData() const { return data; }
@@ -234,8 +236,8 @@ private:
 class EnumerateRemoteSectionsAndModulesMessage : public IMessage
 {
 public:
-	static const int StaticType = 8;
-	virtual int GetType() const override { return StaticType; }
+	static const int StaticMessageType = 8;
+	virtual int GetMessageType() const override { return StaticMessageType; }
 
 	virtual void ReadFrom(BinaryReader& reader) override
 	{
@@ -253,34 +255,31 @@ public:
 class EnumerateRemoteSectionCallbackMessage : public IMessage
 {
 public:
-	static const int StaticType = 9;
-	virtual int GetType() const override { return StaticType; }
+	static const int StaticMessageType = 9;
+	virtual int GetMessageType() const override { return StaticMessageType; }
 
-	const void* GetBaseAddress() const { return baseAddress; }
-	const void* GetRegionSize() const { return regionSize; }
+	RC_Pointer GetBaseAddress() const { return baseAddress; }
+	RC_Pointer GetRegionSize() const { return size; }
+	SectionType GetType() const { return type; }
+	SectionProtection GetProtection() const { return protection; }
 	const std::wstring& GetName() const { return name; }
-	int GetState() const { return state; }
-	int GetProtection() const { return protection; }
-	int GetSectionType() const { return sectionType; }
 	const std::wstring& GetModulePath() const { return modulePath; }
 
 	EnumerateRemoteSectionCallbackMessage()
 		: baseAddress(0),
-		  regionSize(0),
-		  state(0),
-		  protection(0),
-		  sectionType(0)
+		  size(0),
+		  type(SectionType::Unknown),
+		  protection(SectionProtection::NoAccess)
 	{
 
 	}
 
-	EnumerateRemoteSectionCallbackMessage(const void* _baseAddress, const void* _regionSize, std::wstring&& _name, int _state, int _protection, int _type, std::wstring&& _modulePath)
+	EnumerateRemoteSectionCallbackMessage(RC_Pointer _baseAddress, RC_Pointer _size, SectionType _type, SectionProtection _protection, std::wstring&& _name, std::wstring&& _modulePath)
 		: baseAddress(_baseAddress),
-		  regionSize(_regionSize),
-		  name(std::move(_name)),
-		  state(_state),
+		  size(_size),
+		  type(_type),
 		  protection(_protection),
-		  sectionType(_type),
+		  name(std::move(_name)),
 		  modulePath(std::move(_modulePath))
 	{
 
@@ -289,55 +288,52 @@ public:
 	virtual void ReadFrom(BinaryReader& reader) override
 	{
 		baseAddress = reader.ReadIntPtr();
-		regionSize = reader.ReadIntPtr();
+		size = reader.ReadIntPtr();
+		type = (SectionType)reader.ReadInt32();
+		protection = (SectionProtection)reader.ReadInt32();
 		name = reader.ReadString();
-		state = reader.ReadInt32();
-		protection = reader.ReadInt32();
-		sectionType = reader.ReadInt32();
 		modulePath = reader.ReadString();
 	}
 
 	virtual void WriteTo(BinaryWriter& writer) const override
 	{
 		writer.Write(baseAddress);
-		writer.Write(regionSize);
+		writer.Write(size);
+		writer.Write((int)type);
+		writer.Write((int)protection);
 		writer.Write(name);
-		writer.Write(state);
-		writer.Write(protection);
-		writer.Write(sectionType);
 		writer.Write(modulePath);
 	}
 
 private:
-	const void* baseAddress;
-	const void* regionSize;
+	RC_Pointer baseAddress;
+	RC_Pointer size;
+	SectionType type;
+	SectionProtection protection;
 	std::wstring name;
-	int state;
-	int protection;
-	int sectionType;
 	std::wstring modulePath;
 };
 //---------------------------------------------------------------------------
 class EnumerateRemoteModuleCallbackMessage : public IMessage
 {
 public:
-	static const int StaticType = 10;
-	virtual int GetType() const override { return StaticType; }
+	static const int StaticMessageType = 10;
+	virtual int GetMessageType() const override { return StaticMessageType; }
 
 	const void* GetBaseAddress() const { return baseAddress; }
-	const void* GetRegionSize() const { return regionSize; }
+	const void* GetRegionSize() const { return size; }
 	const std::wstring& GetModulePath() const { return modulePath; }
 
 	EnumerateRemoteModuleCallbackMessage()
 		: baseAddress(0),
-		  regionSize(0)
+		  size(0)
 	{
 
 	}
 
 	EnumerateRemoteModuleCallbackMessage(const void* _baseAddress, const void* _regionSize, std::wstring&& _modulePath)
 		: baseAddress(_baseAddress),
-		  regionSize(_regionSize),
+		  size(_regionSize),
 		  modulePath(std::move(_modulePath))
 	{
 
@@ -346,20 +342,20 @@ public:
 	virtual void ReadFrom(BinaryReader& reader) override
 	{
 		baseAddress = reader.ReadIntPtr();
-		regionSize = reader.ReadIntPtr();
+		size = reader.ReadIntPtr();
 		modulePath = reader.ReadString();
 	}
 
 	virtual void WriteTo(BinaryWriter& writer) const override
 	{
 		writer.Write(baseAddress);
-		writer.Write(regionSize);
+		writer.Write(size);
 		writer.Write(modulePath);
 	}
 
 private:
 	const void* baseAddress;
-	const void* regionSize;
+	const void* size;
 	std::wstring modulePath;
 };
 //---------------------------------------------------------------------------

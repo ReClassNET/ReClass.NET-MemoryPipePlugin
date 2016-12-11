@@ -25,16 +25,16 @@ MessageClient CreateClient(NamedPipeServerStream& pipe)
 {
 	MessageClient client(pipe);
 
-	client.RegisterMessage(StatusMessage::StaticType, []() { return std::make_unique<StatusMessage>(); });
-	client.RegisterMessage(OpenProcessMessage::StaticType, []() { return std::make_unique<OpenProcessMessage>(); });
-	client.RegisterMessage(CloseProcessMessage::StaticType, []() { return std::make_unique<CloseProcessMessage>(); });
-	client.RegisterMessage(IsValidMessage::StaticType, []() { return std::make_unique<IsValidMessage>(); });
-	client.RegisterMessage(ReadMemoryMessage::StaticType, []() { return std::make_unique<ReadMemoryMessage>(); });
-	client.RegisterMessage(ReadMemoryDataMessage::StaticType, []() { return std::make_unique<ReadMemoryDataMessage>(); });
-	client.RegisterMessage(WriteMemoryMessage::StaticType, []() { return std::make_unique<WriteMemoryMessage>(); });
-	client.RegisterMessage(EnumerateRemoteSectionsAndModulesMessage::StaticType, []() { return std::make_unique<EnumerateRemoteSectionsAndModulesMessage>(); });
-	client.RegisterMessage(EnumerateRemoteSectionCallbackMessage::StaticType, []() { return std::make_unique<EnumerateRemoteSectionCallbackMessage>(); });
-	client.RegisterMessage(EnumerateRemoteModuleCallbackMessage::StaticType, []() { return std::make_unique<EnumerateRemoteModuleCallbackMessage>(); });
+	client.RegisterMessage(StatusMessage::StaticMessageType, []() { return std::make_unique<StatusMessage>(); });
+	client.RegisterMessage(OpenProcessMessage::StaticMessageType, []() { return std::make_unique<OpenProcessMessage>(); });
+	client.RegisterMessage(CloseProcessMessage::StaticMessageType, []() { return std::make_unique<CloseProcessMessage>(); });
+	client.RegisterMessage(IsValidMessage::StaticMessageType, []() { return std::make_unique<IsValidMessage>(); });
+	client.RegisterMessage(ReadMemoryMessage::StaticMessageType, []() { return std::make_unique<ReadMemoryMessage>(); });
+	client.RegisterMessage(ReadMemoryDataMessage::StaticMessageType, []() { return std::make_unique<ReadMemoryDataMessage>(); });
+	client.RegisterMessage(WriteMemoryMessage::StaticMessageType, []() { return std::make_unique<WriteMemoryMessage>(); });
+	client.RegisterMessage(EnumerateRemoteSectionsAndModulesMessage::StaticMessageType, []() { return std::make_unique<EnumerateRemoteSectionsAndModulesMessage>(); });
+	client.RegisterMessage(EnumerateRemoteSectionCallbackMessage::StaticMessageType, []() { return std::make_unique<EnumerateRemoteSectionCallbackMessage>(); });
+	client.RegisterMessage(EnumerateRemoteModuleCallbackMessage::StaticMessageType, []() { return std::make_unique<EnumerateRemoteModuleCallbackMessage>(); });
 
 	return client;
 }

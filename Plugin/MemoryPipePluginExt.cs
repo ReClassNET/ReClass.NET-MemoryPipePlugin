@@ -160,7 +160,7 @@ namespace MemoryPipePlugin
 					client.RegisteredMessages.Add(ReadMemoryDataMessage.StaticType, () => new ReadMemoryDataMessage());
 					client.RegisteredMessages.Add(WriteMemoryMessage.StaticType, () => new WriteMemoryMessage());
 					client.RegisteredMessages.Add(EnumerateRemoteSectionsAndModulesMessage.StaticType, () => new EnumerateRemoteSectionsAndModulesMessage());
-					client.RegisteredMessages.Add(EnumerateRemoteSectionCallbackMessage.StaticType, () => new EnumerateRemoteSectionCallbackMessage());
+					client.RegisteredMessages.Add(EnumerateRemoteSectionCallbackMessage.StaticMessageType, () => new EnumerateRemoteSectionCallbackMessage());
 					client.RegisteredMessages.Add(EnumerateRemoteModuleCallbackMessage.StaticType, () => new EnumerateRemoteModuleCallbackMessage());
 
 					var handle = pipe.SafePipeHandle.DangerousGetHandle();
@@ -327,7 +327,13 @@ namespace MemoryPipePlugin
 				if (platform.ToLower() == "x86")
 #endif
 				{
-					callbackProcess(pipe.GetHashCode(), pipe);
+					var data = new EnumerateProcessData
+					{
+						Id = (IntPtr)pipe.GetHashCode(),
+						Path = pipe
+					};
+
+					callbackProcess(ref data);
 				}
 			}
 		}
@@ -373,25 +379,30 @@ namespace MemoryPipePlugin
 							var callbackSectionMessage = message as EnumerateRemoteSectionCallbackMessage;
 							if (callbackSectionMessage != null)
 							{
-								callbackSection?.Invoke(
-									callbackSectionMessage.BaseAddress,
-									callbackSectionMessage.RegionSize,
-									callbackSectionMessage.Name,
-									callbackSectionMessage.State,
-									callbackSectionMessage.Protection,
-									callbackSectionMessage.SectionType,
-									callbackSectionMessage.ModulePath
-								);
+								var data = new EnumerateRemoteSectionData
+								{
+									BaseAddress = callbackSectionMessage.BaseAddress,
+									Size = callbackSectionMessage.Size,
+									Type = callbackSectionMessage.Type,
+									Protection = callbackSectionMessage.Protection,
+									Name = callbackSectionMessage.Name,
+									ModulePath = callbackSectionMessage.ModulePath
+								};
+
+								callbackSection?.Invoke(ref data);
 							}
 
 							var callbackModuleMessage = message as EnumerateRemoteModuleCallbackMessage;
 							if (callbackModuleMessage != null)
 							{
-								callbackModule?.Invoke(
-									callbackModuleMessage.BaseAddress,
-									callbackModuleMessage.RegionSize,
-									callbackModuleMessage.ModulePath
-								);
+								var data = new EnumerateRemoteModuleData
+								{
+									BaseAddress = callbackModuleMessage.BaseAddress,
+									Size = callbackModuleMessage.Size,
+									Path = callbackModuleMessage.Path
+								};
+
+								callbackModule?.Invoke(ref data);
 							}
 						}
 					}

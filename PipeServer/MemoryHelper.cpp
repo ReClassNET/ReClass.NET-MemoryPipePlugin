@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <functional>
 
+#include "ReClassNET_Plugin.hpp"
+
 bool IsValidMemoryRange(LPCVOID address, int length)
 {
 	auto endAddress = static_cast<const uint8_t*>(address) + length;
@@ -72,19 +74,9 @@ bool WriteMemory(LPVOID address, const std::vector<uint8_t>& buffer)
 	return false;
 }
 //---------------------------------------------------------------------------
-void EnumerateRemoteSectionsAndModules(const std::function<void(const void*, const void*, std::wstring&&)>& moduleCallback, const std::function<void(const void*, const void*, std::wstring&&, int, int, int, std::wstring&&)>& sectionCallback)
+void EnumerateRemoteSectionsAndModules(const std::function<void(RC_Pointer, RC_Pointer, std::wstring&&)>& moduleCallback, const std::function<void(RC_Pointer, RC_Pointer, SectionType, SectionProtection, std::wstring&&, std::wstring&&)>& sectionCallback)
 {
-	struct SectionInfo
-	{
-		LPVOID BaseAddress;
-		SIZE_T RegionSize;
-		WCHAR Name[IMAGE_SIZEOF_SHORT_NAME + 1];
-		DWORD State;
-		DWORD Protection;
-		DWORD Type;
-		WCHAR ModulePath[260];
-	};
-	std::vector<SectionInfo> sections;
+	std::vector<EnumerateRemoteSectionData> sections;
 
 	// First enumerate all memory sections.
 	MEMORY_BASIC_INFORMATION memInfo = { 0 };
@@ -94,12 +86,50 @@ void EnumerateRemoteSectionsAndModules(const std::function<void(const void*, con
 	{
 		if (memInfo.State == MEM_COMMIT)
 		{
-			SectionInfo section = {};
+			EnumerateRemoteSectionData section = {};
 			section.BaseAddress = memInfo.BaseAddress;
-			section.RegionSize = memInfo.RegionSize;
-			section.State = memInfo.State;
-			section.Protection = memInfo.Protect;
-			section.Type = memInfo.Type;
+			section.Size = memInfo.RegionSize;
+
+			switch (memInfo.Protect & 0xFF)
+			{
+			case PAGE_EXECUTE:
+				section.Protection = SectionProtection::Execute;
+				break;
+			case PAGE_EXECUTE_READ:
+				section.Protection = SectionProtection::Execute | SectionProtection::Read;
+				break;
+			case PAGE_EXECUTE_READWRITE:
+			case PAGE_EXECUTE_WRITECOPY:
+				section.Protection = SectionProtection::Execute | SectionProtection::Read | SectionProtection::Write;
+				break;
+			case PAGE_NOACCESS:
+				section.Protection = SectionProtection::NoAccess;
+				break;
+			case PAGE_READONLY:
+				section.Protection = SectionProtection::Read;
+				break;
+			case PAGE_READWRITE:
+			case PAGE_WRITECOPY:
+				section.Protection = SectionProtection::Read | SectionProtection::Write;
+				break;
+			}
+			if ((memInfo.Protect & PAGE_GUARD) == PAGE_GUARD)
+			{
+				section.Protection |= SectionProtection::Guard;
+			}
+
+			switch (memInfo.Type)
+			{
+			case MEM_IMAGE:
+				section.Type = SectionType::Image;
+				break;
+			case MEM_MAPPED:
+				section.Type = SectionType::Mapped;
+				break;
+			case MEM_PRIVATE:
+				section.Type = SectionType::Private;
+				break;
+			}
 
 			sections.push_back(std::move(section));
 		}
@@ -160,9 +190,9 @@ void EnumerateRemoteSectionsAndModules(const std::function<void(const void*, con
 	auto ldr = reinterpret_cast<LDR_MODULE*>(peb->LoaderData->InLoadOrderModuleList.Flink);
 	while (ldr->BaseAddress != nullptr)
 	{
-		moduleCallback(ldr->BaseAddress, (const void*)(intptr_t)ldr->SizeOfImage, ldr->FullDllName.Buffer);
+		moduleCallback((RC_Pointer)ldr->BaseAddress, (RC_Pointer)(intptr_t)ldr->SizeOfImage, ldr->FullDllName.Buffer);
 
-		auto it = std::lower_bound(std::begin(sections), std::end(sections), ldr->BaseAddress, [&sections](const SectionInfo& lhs, const LPVOID& rhs)
+		auto it = std::lower_bound(std::begin(sections), std::end(sections), ldr->BaseAddress, [&sections](const auto& lhs, const LPVOID& rhs)
 		{
 			return lhs.BaseAddress < rhs;
 		});
@@ -176,7 +206,7 @@ void EnumerateRemoteSectionsAndModules(const std::function<void(const void*, con
 			auto sectionAddress = (intptr_t)ldr->BaseAddress + (intptr_t)sectionHeader->VirtualAddress;
 			for (auto j = it; j != std::end(sections); ++j)
 			{
-				if (sectionAddress >= (intptr_t)j->BaseAddress && sectionAddress < (intptr_t)j->BaseAddress + (intptr_t)j->RegionSize)
+				if (sectionAddress >= (intptr_t)j->BaseAddress && sectionAddress < (intptr_t)j->BaseAddress + (intptr_t)j->Size)
 				{
 					// Copy the name because it is not null padded.
 					char buffer[IMAGE_SIZEOF_SHORT_NAME + 1] = { 0 };
@@ -184,7 +214,7 @@ void EnumerateRemoteSectionsAndModules(const std::function<void(const void*, con
 
 					size_t convertedChars = 0;
 					mbstowcs_s(&convertedChars, j->Name, IMAGE_SIZEOF_SHORT_NAME, buffer, _TRUNCATE);
-					std::memcpy(j->ModulePath, ldr->FullDllName.Buffer, sizeof(SectionInfo::ModulePath));
+					std::memcpy(j->ModulePath, ldr->FullDllName.Buffer, sizeof(EnumerateRemoteSectionData::ModulePath));
 					break;
 				}
 			}
@@ -195,7 +225,7 @@ void EnumerateRemoteSectionsAndModules(const std::function<void(const void*, con
 
 	for (auto&& section : sections)
 	{
-		sectionCallback(section.BaseAddress, (const void*)section.RegionSize, section.Name, section.State, section.Protection, section.Type, section.ModulePath);
+		sectionCallback(section.BaseAddress, (RC_Pointer)section.Size, section.Type, section.Protection, section.Name, section.ModulePath);
 	}
 }
 //---------------------------------------------------------------------------

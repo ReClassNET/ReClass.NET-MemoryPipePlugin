@@ -61,7 +61,7 @@ namespace MemoryPipePlugin
 			{
 				using (var bw = new BinaryWriter(ms, Encoding.Unicode, true))
 				{
-					bw.Write(message.Type);
+					bw.Write(message.MessageType);
 					message.WriteTo(bw);
 				}
 

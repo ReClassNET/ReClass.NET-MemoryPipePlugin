@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
 using System.IO;
+using ReClassNET.Memory;
 using ReClassNET.Util;
 
 namespace MemoryPipePlugin
 {
 	interface IMessage
 	{
-		int Type { get; }
+		int MessageType { get; }
 
 		void ReadFrom(BinaryReader reader);
 		void WriteTo(BinaryWriter writer);
@@ -16,7 +17,7 @@ namespace MemoryPipePlugin
 	[ContractClassFor(typeof(IMessage))]
 	internal class ICodeGeneratorContract : IMessage
 	{
-		public int Type
+		public int MessageType
 		{
 			get
 			{
@@ -42,7 +43,7 @@ namespace MemoryPipePlugin
 	class StatusMessage : IMessage
 	{
 		public static int StaticType = 1;
-		public int Type => StaticType;
+		public int MessageType => StaticType;
 
 		public bool Success { get; private set; }
 
@@ -70,7 +71,7 @@ namespace MemoryPipePlugin
 	class OpenProcessMessage : IMessage
 	{
 		public static int StaticType = 2;
-		public int Type => StaticType;
+		public int MessageType => StaticType;
 
 		public void ReadFrom(BinaryReader reader)
 		{
@@ -86,7 +87,7 @@ namespace MemoryPipePlugin
 	class CloseProcessMessage : IMessage
 	{
 		public static int StaticType = 3;
-		public int Type => StaticType;
+		public int MessageType => StaticType;
 
 		public void ReadFrom(BinaryReader reader)
 		{
@@ -102,7 +103,7 @@ namespace MemoryPipePlugin
 	class IsValidMessage : IMessage
 	{
 		public static int StaticType = 4;
-		public int Type => StaticType;
+		public int MessageType => StaticType;
 
 		public void ReadFrom(BinaryReader reader)
 		{
@@ -118,7 +119,7 @@ namespace MemoryPipePlugin
 	class ReadMemoryMessage : IMessage
 	{
 		public static int StaticType = 5;
-		public int Type => StaticType;
+		public int MessageType => StaticType;
 
 		public IntPtr Address { get; private set; }
 		public int Size { get; private set; }
@@ -150,7 +151,7 @@ namespace MemoryPipePlugin
 	class ReadMemoryDataMessage : IMessage
 	{
 		public static int StaticType = 6;
-		public int Type => StaticType;
+		public int MessageType => StaticType;
 
 		public byte[] Data { get; private set; }
 
@@ -180,7 +181,7 @@ namespace MemoryPipePlugin
 	class WriteMemoryMessage : IMessage
 	{
 		public static int StaticType = 7;
-		public int Type => StaticType;
+		public int MessageType => StaticType;
 
 		public IntPtr Address { get; private set; }
 		public byte[] Data { get; private set; }
@@ -214,7 +215,7 @@ namespace MemoryPipePlugin
 	class EnumerateRemoteSectionsAndModulesMessage : IMessage
 	{
 		public static int StaticType = 8;
-		public int Type => StaticType;
+		public int MessageType => StaticType;
 
 		public void ReadFrom(BinaryReader reader)
 		{
@@ -229,15 +230,14 @@ namespace MemoryPipePlugin
 
 	class EnumerateRemoteSectionCallbackMessage : IMessage
 	{
-		public static int StaticType = 9;
-		public int Type => StaticType;
+		public static int StaticMessageType = 9;
+		public int MessageType => StaticMessageType;
 
 		public IntPtr BaseAddress { get; private set; }
-		public IntPtr RegionSize { get; private set; }
+		public IntPtr Size { get; private set; }
+		public SectionType Type { get; private set; }
+		public SectionProtection Protection { get; private set; }
 		public string Name { get; private set; }
-		public NativeMethods.StateEnum State { get; private set; }
-		public NativeMethods.AllocationProtectEnum Protection { get; private set; }
-		public NativeMethods.TypeEnum SectionType { get; private set; }
 		public string ModulePath { get; private set; }
 
 		public EnumerateRemoteSectionCallbackMessage()
@@ -245,36 +245,33 @@ namespace MemoryPipePlugin
 
 		}
 
-		public EnumerateRemoteSectionCallbackMessage(IntPtr baseAddress, IntPtr regionSize, string name, NativeMethods.StateEnum state, NativeMethods.AllocationProtectEnum protection, NativeMethods.TypeEnum type, string modulePath)
+		public EnumerateRemoteSectionCallbackMessage(IntPtr baseAddress, IntPtr regionSize, SectionType type, SectionProtection protection, string name, string modulePath)
 		{
 			BaseAddress = baseAddress;
-			RegionSize = regionSize;
-			Name = name;
-			State = state;
+			Size = regionSize;
+			Type = type;
 			Protection = protection;
-			SectionType = type;
+			Name = name;
 			ModulePath = modulePath;
 		}
 
 		public void ReadFrom(BinaryReader reader)
 		{
 			BaseAddress = reader.ReadIntPtr();
-			RegionSize = reader.ReadIntPtr();
+			Size = reader.ReadIntPtr();
+			Type = (SectionType)reader.ReadInt32();
+			Protection = (SectionProtection)reader.ReadInt32();
 			Name = reader.ReadString();
-			State = (NativeMethods.StateEnum)reader.ReadInt32();
-			Protection = (NativeMethods.AllocationProtectEnum)reader.ReadInt32();
-			SectionType = (NativeMethods.TypeEnum)reader.ReadInt32();
 			ModulePath = reader.ReadString();
 		}
 
 		public void WriteTo(BinaryWriter writer)
 		{
 			writer.Write(BaseAddress);
-			writer.Write(RegionSize);
-			writer.Write(Name);
-			writer.Write((int)State);
+			writer.Write(Size);
+			writer.Write((int)Type);
 			writer.Write((int)Protection);
-			writer.Write((int)SectionType);
+			writer.Write(Name);
 			writer.Write(ModulePath);
 		}
 	}
@@ -282,36 +279,36 @@ namespace MemoryPipePlugin
 	class EnumerateRemoteModuleCallbackMessage : IMessage
 	{
 		public static int StaticType = 10;
-		public int Type => StaticType;
+		public int MessageType => StaticType;
 
 		public IntPtr BaseAddress { get; private set; }
-		public IntPtr RegionSize { get; private set; }
-		public string ModulePath { get; private set; }
+		public IntPtr Size { get; private set; }
+		public string Path { get; private set; }
 
 		public EnumerateRemoteModuleCallbackMessage()
 		{
 
 		}
 
-		public EnumerateRemoteModuleCallbackMessage(IntPtr baseAddress, IntPtr regionSize, string modulePath)
+		public EnumerateRemoteModuleCallbackMessage(IntPtr baseAddress, IntPtr regionSize, string path)
 		{
 			BaseAddress = baseAddress;
-			RegionSize = regionSize;
-			ModulePath = modulePath;
+			Size = regionSize;
+			Path = path;
 		}
 
 		public void ReadFrom(BinaryReader reader)
 		{
 			BaseAddress = reader.ReadIntPtr();
-			RegionSize = reader.ReadIntPtr();
-			ModulePath = reader.ReadString();
+			Size = reader.ReadIntPtr();
+			Path = reader.ReadString();
 		}
 
 		public void WriteTo(BinaryWriter writer)
 		{
 			writer.Write(BaseAddress);
-			writer.Write(RegionSize);
-			writer.Write(ModulePath);
+			writer.Write(Size);
+			writer.Write(Path);
 		}
 	}
 }

@@ -165,6 +165,7 @@
     <ClInclude Include="Messages.hpp" />
     <ClInclude Include="NamedPipeServerStream.hpp" />
     <ClInclude Include="PipeStream.hpp" />
+    <ClInclude Include="ReClassNET_Plugin.hpp" />
     <ClInclude Include="SafeHandle.hpp" />
     <ClInclude Include="Stream.hpp" />
   </ItemGroup>

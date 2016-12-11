@@ -22,5 +22,6 @@
     <ClInclude Include="NamedPipeServerStream.hpp" />
     <ClInclude Include="Messages.hpp" />
     <ClInclude Include="MessageClient.hpp" />
+    <ClInclude Include="ReClassNET_Plugin.hpp" />
   </ItemGroup>
 </Project>
