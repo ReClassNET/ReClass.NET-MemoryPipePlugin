@@ -5,22 +5,21 @@ using System.Drawing;
 using System.IO;
 using System.IO.Pipes;
 using System.Linq;
-using System.Runtime.InteropServices;
+using ReClassNET.Core;
+using ReClassNET.Debugger;
 using ReClassNET.Plugins;
-using RGiesecke.DllExport;
-using static ReClassNET.Memory.NativeHelper;
 
 namespace MemoryPipePlugin
 {
-	public class MemoryPipePluginExt : Plugin
+	public class MemoryPipePluginExt : Plugin, ICoreProcessFunctions
 	{
 		private const string PipePrefix = @"\\.\pipe\";
 
-		private static object sync = new object();
+		private object sync = new object();
 
-		private static IPluginHost host;
+		private IPluginHost host;
 
-		private static Dictionary<IntPtr, MessageClient> openPipes;
+		private Dictionary<IntPtr, MessageClient> openPipes;
 
 		public override Image Icon => Properties.Resources.logo;
 
@@ -30,7 +29,7 @@ namespace MemoryPipePlugin
 
 			//System.Diagnostics.Debugger.Launch();
 
-			if (MemoryPipePluginExt.host != null)
+			if (this.host != null)
 			{
 				Terminate();
 			}
@@ -40,7 +39,9 @@ namespace MemoryPipePlugin
 				throw new ArgumentNullException(nameof(host));
 			}
 
-			MemoryPipePluginExt.host = host;
+			this.host = host;
+
+			host.Process.CoreFunctions.RegisterFunctions("Memory Pipe", this);
 
 			openPipes = new Dictionary<IntPtr, MessageClient>();
 
@@ -61,7 +62,7 @@ namespace MemoryPipePlugin
 		/// <summary>Gets a <see cref="MessageClient"/> by its plugin internal identifier.</summary>
 		/// <param name="id">The identifier.</param>
 		/// <returns>The client or null if the identifier doesn't exist.</returns>
-		private static MessageClient GetClientById(IntPtr id)
+		private MessageClient GetClientById(IntPtr id)
 		{
 			MessageClient client;
 			openPipes.TryGetValue(id, out client);
@@ -71,7 +72,7 @@ namespace MemoryPipePlugin
 		/// <summary>Logs the exception and removes client.</summary>
 		/// <param name="id">The identifier.</param>
 		/// <param name="ex">The exception.</param>
-		private static void LogErrorAndRemoveClient(IntPtr id, Exception ex)
+		private void LogErrorAndRemoveClient(IntPtr id, Exception ex)
 		{
 			Contract.Requires(ex != null);
 
@@ -97,8 +98,7 @@ namespace MemoryPipePlugin
 		/// ]]></remarks>
 		/// <param name="process">The process to check.</param>
 		/// <returns>True if the process is valid, false if not.</returns>
-		[DllExport(CallingConvention = CallingConvention.StdCall)]
-		public static bool IsProcessValid(IntPtr process)
+		public bool IsProcessValid(IntPtr process)
 		{
 			lock (sync)
 			{
@@ -131,14 +131,13 @@ namespace MemoryPipePlugin
 		/// <param name="pid">The process id.</param>
 		/// <param name="desiredAccess">The desired access. (ignored)</param>
 		/// <returns>A plugin internal handle to the process.</returns>
-		[DllExport(CallingConvention = CallingConvention.StdCall)]
-		private static IntPtr OpenRemoteProcess(int pid, int desiredAccess)
+		public IntPtr OpenRemoteProcess(IntPtr pid, ProcessAccess desiredAccess)
 		{
 			lock (sync)
 			{
 				try
 				{
-					var pipePath = GetPipes().Where(p => p.GetHashCode() == pid).FirstOrDefault();
+					var pipePath = GetPipes().Where(p => p.GetHashCode() == pid.ToInt32()).FirstOrDefault();
 					if (pipePath == null)
 					{
 						return IntPtr.Zero;
@@ -195,8 +194,7 @@ namespace MemoryPipePlugin
 		/// <- StatusMessage
 		/// ]]></remarks>
 		/// <param name="process">The process to close.</param>
-		[DllExport(CallingConvention = CallingConvention.StdCall)]
-		private static void CloseRemoteProcess(IntPtr process)
+		public void CloseRemoteProcess(IntPtr process)
 		{
 			lock (sync)
 			{
@@ -232,8 +230,7 @@ namespace MemoryPipePlugin
 		/// <param name="buffer">The buffer to read into.</param>
 		/// <param name="size">The size of the memory to read.</param>
 		/// <returns>True if it succeeds, false if it fails.</returns>
-		[DllExport(CallingConvention = CallingConvention.StdCall)]
-		private static bool ReadRemoteMemory(IntPtr process, IntPtr address, IntPtr buffer, int size)
+		public bool ReadRemoteMemory(IntPtr process, IntPtr address, ref byte[] buffer, int offset, int size)
 		{
 			lock (sync)
 			{
@@ -254,7 +251,7 @@ namespace MemoryPipePlugin
 						{
 							if (memoryResponse.Data.Length == size)
 							{
-								Marshal.Copy(memoryResponse.Data, 0, buffer, size);
+								Array.Copy(memoryResponse.Data, 0, buffer, offset, size);
 
 								return true;
 							}
@@ -281,8 +278,7 @@ namespace MemoryPipePlugin
 		/// <param name="buffer">The memory to write.</param>
 		/// <param name="size">The size of the memory to write.</param>
 		/// <returns>True if it succeeds, false if it fails.</returns>
-		[DllExport(CallingConvention = CallingConvention.StdCall)]
-		private static bool WriteRemoteMemory(IntPtr process, IntPtr address, IntPtr buffer, int size)
+		public bool WriteRemoteMemory(IntPtr process, IntPtr address, ref byte[] buffer, int offset, int size)
 		{
 			lock (sync)
 			{
@@ -292,7 +288,7 @@ namespace MemoryPipePlugin
 					try
 					{
 						var data = new byte[size];
-						Marshal.Copy(buffer, data, 0, size);
+						Array.Copy(buffer, offset, data, 0, size);
 
 						client.Send(new WriteMemoryMessage(address, data));
 						var message = client.Receive() as StatusMessage;
@@ -310,8 +306,7 @@ namespace MemoryPipePlugin
 
 		/// <summary>Enumerates all pipes started by the ReClass.NET PipeServer.</summary>
 		/// <param name="callbackProcess">The callback which gets called for every process.</param>
-		[DllExport(CallingConvention = CallingConvention.StdCall)]
-		private static void EnumerateProcesses(EnumerateProcessCallback callbackProcess)
+		public void EnumerateProcesses(EnumerateProcessCallback callbackProcess)
 		{
 			if (callbackProcess == null)
 			{
@@ -351,8 +346,7 @@ namespace MemoryPipePlugin
 		/// <param name="process">The process.</param>
 		/// <param name="callbackSection">The callback which gets called for every section.</param>
 		/// <param name="callbackModule">The callback which gets called for every module.</param>
-		[DllExport(CallingConvention = CallingConvention.StdCall)]
-		private static void EnumerateRemoteSectionsAndModules(IntPtr process, EnumerateRemoteSectionCallback callbackSection, EnumerateRemoteModuleCallback callbackModule)
+		public void EnumerateRemoteSectionsAndModules(IntPtr process, EnumerateRemoteSectionCallback callbackSection, EnumerateRemoteModuleCallback callbackModule)
 		{
 			if (callbackSection == null && callbackModule == null)
 			{
@@ -412,6 +406,42 @@ namespace MemoryPipePlugin
 					}
 				}
 			}
+		}
+
+		public void ControlRemoteProcess(IntPtr process, ControlRemoteProcessAction action)
+		{
+			// Not supported.
+		}
+
+		public bool AttachDebuggerToProcess(IntPtr id)
+		{
+			// Not supported.
+
+			return false;
+		}
+
+		public void DetachDebuggerFromProcess(IntPtr id)
+		{
+			// Not supported.
+		}
+
+		public bool AwaitDebugEvent(ref DebugEvent evt, int timeoutInMilliseconds)
+		{
+			// Not supported.
+
+			return false;
+		}
+
+		public void HandleDebugEvent(ref DebugEvent evt)
+		{
+			// Not supported.
+		}
+
+		public bool SetHardwareBreakpoint(IntPtr id, IntPtr address, HardwareBreakpointRegister register, HardwareBreakpointTrigger trigger, HardwareBreakpointSize size, bool set)
+		{
+			// Not supported.
+
+			return false;
 		}
 	}
 }
