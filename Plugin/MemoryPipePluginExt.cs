@@ -378,6 +378,7 @@ namespace MemoryPipePlugin
 									BaseAddress = callbackSectionMessage.BaseAddress,
 									Size = callbackSectionMessage.Size,
 									Type = callbackSectionMessage.Type,
+									Category = callbackSectionMessage.Category,
 									Protection = callbackSectionMessage.Protection,
 									Name = callbackSectionMessage.Name,
 									ModulePath = callbackSectionMessage.ModulePath

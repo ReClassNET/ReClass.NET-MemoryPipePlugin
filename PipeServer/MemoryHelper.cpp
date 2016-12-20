@@ -74,7 +74,7 @@ bool WriteMemory(LPVOID address, const std::vector<uint8_t>& buffer)
 	return false;
 }
 //---------------------------------------------------------------------------
-void EnumerateRemoteSectionsAndModules(const std::function<void(RC_Pointer, RC_Pointer, std::wstring&&)>& moduleCallback, const std::function<void(RC_Pointer, RC_Pointer, SectionType, SectionProtection, std::wstring&&, std::wstring&&)>& sectionCallback)
+void EnumerateRemoteSectionsAndModules(const std::function<void(RC_Pointer, RC_Pointer, std::wstring&&)>& moduleCallback, const std::function<void(RC_Pointer, RC_Pointer, SectionType, SectionCategory, SectionProtection, std::wstring&&, std::wstring&&)>& sectionCallback)
 {
 	std::vector<EnumerateRemoteSectionData> sections;
 
@@ -130,6 +130,8 @@ void EnumerateRemoteSectionsAndModules(const std::function<void(RC_Pointer, RC_P
 				section.Type = SectionType::Private;
 				break;
 			}
+
+			section.Category = section.Type == SectionType::Private ? SectionCategory::HEAP : SectionCategory::Unknown;
 
 			sections.push_back(std::move(section));
 		}
@@ -212,6 +214,15 @@ void EnumerateRemoteSectionsAndModules(const std::function<void(RC_Pointer, RC_P
 					char buffer[IMAGE_SIZEOF_SHORT_NAME + 1] = { 0 };
 					std::memcpy(buffer, sectionHeader->Name, IMAGE_SIZEOF_SHORT_NAME);
 
+					if (std::strcmp(buffer, ".text") == 0 || std::strcmp(buffer, "code") == 0)
+					{
+						j->Category = SectionCategory::CODE;
+					}
+					else if (std::strcmp(buffer, ".data") == 0 || std::strcmp(buffer, "data") == 0 || std::strcmp(buffer, ".rdata") == 0 || std::strcmp(buffer, ".idata") == 0)
+					{
+						j->Category = SectionCategory::DATA;
+					}
+
 					size_t convertedChars = 0;
 					mbstowcs_s(&convertedChars, j->Name, IMAGE_SIZEOF_SHORT_NAME, buffer, _TRUNCATE);
 					std::memcpy(j->ModulePath, ldr->FullDllName.Buffer, sizeof(EnumerateRemoteSectionData::ModulePath));
@@ -225,7 +236,7 @@ void EnumerateRemoteSectionsAndModules(const std::function<void(RC_Pointer, RC_P
 
 	for (auto&& section : sections)
 	{
-		sectionCallback(section.BaseAddress, (RC_Pointer)section.Size, section.Type, section.Protection, section.Name, section.ModulePath);
+		sectionCallback(section.BaseAddress, (RC_Pointer)section.Size, section.Type, section.Category, section.Protection, section.Name, section.ModulePath);
 	}
 }
 //---------------------------------------------------------------------------

@@ -3,7 +3,7 @@
 
 extern bool ReadMemory(LPCVOID, std::vector<uint8_t>&);
 extern bool WriteMemory(LPVOID, const std::vector<uint8_t>&);
-extern void EnumerateRemoteSectionsAndModules(const std::function<void(RC_Pointer, RC_Pointer, std::wstring&&)>&, const std::function<void(RC_Pointer, RC_Pointer, SectionType, SectionProtection, std::wstring&&, std::wstring&&)>&);
+extern void EnumerateRemoteSectionsAndModules(const std::function<void(RC_Pointer, RC_Pointer, std::wstring&&)>&, const std::function<void(RC_Pointer, RC_Pointer, SectionType, SectionCategory, SectionProtection, std::wstring&&, std::wstring&&)>&);
 
 bool OpenProcessMessage::Handle(MessageClient& client)
 {
@@ -56,7 +56,7 @@ bool EnumerateRemoteSectionsAndModulesMessage::Handle(MessageClient& client)
 {
 	EnumerateRemoteSectionsAndModules(
 		[&](auto p1, auto p2, auto p3) { client.Send(EnumerateRemoteModuleCallbackMessage(p1, p2, std::move(p3))); },
-		[&](auto p1, auto p2, auto p3, auto p4, auto p5, auto p6) { client.Send(EnumerateRemoteSectionCallbackMessage(p1, p2, p3, p4, std::move(p5), std::move(p6))); }
+		[&](auto p1, auto p2, auto p3, auto p4, auto p5, auto p6, auto p7) { client.Send(EnumerateRemoteSectionCallbackMessage(p1, p2, p3, p4, p5, std::move(p6), std::move(p7))); }
 	);
 	
 	// Report enumeration complete to client.

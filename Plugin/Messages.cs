@@ -236,6 +236,7 @@ namespace MemoryPipePlugin
 		public IntPtr BaseAddress { get; private set; }
 		public IntPtr Size { get; private set; }
 		public SectionType Type { get; private set; }
+		public SectionCategory Category { get; private set; }
 		public SectionProtection Protection { get; private set; }
 		public string Name { get; private set; }
 		public string ModulePath { get; private set; }
@@ -245,11 +246,12 @@ namespace MemoryPipePlugin
 
 		}
 
-		public EnumerateRemoteSectionCallbackMessage(IntPtr baseAddress, IntPtr regionSize, SectionType type, SectionProtection protection, string name, string modulePath)
+		public EnumerateRemoteSectionCallbackMessage(IntPtr baseAddress, IntPtr regionSize, SectionType type, SectionCategory category, SectionProtection protection, string name, string modulePath)
 		{
 			BaseAddress = baseAddress;
 			Size = regionSize;
 			Type = type;
+			Category = category;
 			Protection = protection;
 			Name = name;
 			ModulePath = modulePath;
@@ -260,6 +262,7 @@ namespace MemoryPipePlugin
 			BaseAddress = reader.ReadIntPtr();
 			Size = reader.ReadIntPtr();
 			Type = (SectionType)reader.ReadInt32();
+			Category = (SectionCategory)reader.ReadInt32();
 			Protection = (SectionProtection)reader.ReadInt32();
 			Name = reader.ReadString();
 			ModulePath = reader.ReadString();
@@ -270,6 +273,7 @@ namespace MemoryPipePlugin
 			writer.Write(BaseAddress);
 			writer.Write(Size);
 			writer.Write((int)Type);
+			writer.Write((int)Category);
 			writer.Write((int)Protection);
 			writer.Write(Name);
 			writer.Write(ModulePath);

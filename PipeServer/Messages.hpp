@@ -261,6 +261,7 @@ public:
 	RC_Pointer GetBaseAddress() const { return baseAddress; }
 	RC_Pointer GetRegionSize() const { return size; }
 	SectionType GetType() const { return type; }
+	SectionCategory GetCategory() const { return category; }
 	SectionProtection GetProtection() const { return protection; }
 	const std::wstring& GetName() const { return name; }
 	const std::wstring& GetModulePath() const { return modulePath; }
@@ -269,15 +270,17 @@ public:
 		: baseAddress(0),
 		  size(0),
 		  type(SectionType::Unknown),
+		  category(SectionCategory::Unknown),
 		  protection(SectionProtection::NoAccess)
 	{
 
 	}
 
-	EnumerateRemoteSectionCallbackMessage(RC_Pointer _baseAddress, RC_Pointer _size, SectionType _type, SectionProtection _protection, std::wstring&& _name, std::wstring&& _modulePath)
+	EnumerateRemoteSectionCallbackMessage(RC_Pointer _baseAddress, RC_Pointer _size, SectionType _type, SectionCategory _category, SectionProtection _protection, std::wstring&& _name, std::wstring&& _modulePath)
 		: baseAddress(_baseAddress),
 		  size(_size),
 		  type(_type),
+		  category(_category),
 		  protection(_protection),
 		  name(std::move(_name)),
 		  modulePath(std::move(_modulePath))
@@ -290,6 +293,7 @@ public:
 		baseAddress = reader.ReadIntPtr();
 		size = reader.ReadIntPtr();
 		type = (SectionType)reader.ReadInt32();
+		category = (SectionCategory)reader.ReadInt32();
 		protection = (SectionProtection)reader.ReadInt32();
 		name = reader.ReadString();
 		modulePath = reader.ReadString();
@@ -300,6 +304,7 @@ public:
 		writer.Write(baseAddress);
 		writer.Write(size);
 		writer.Write((int)type);
+		writer.Write((int)category);
 		writer.Write((int)protection);
 		writer.Write(name);
 		writer.Write(modulePath);
@@ -309,6 +314,7 @@ private:
 	RC_Pointer baseAddress;
 	RC_Pointer size;
 	SectionType type;
+	SectionCategory category;
 	SectionProtection protection;
 	std::wstring name;
 	std::wstring modulePath;
