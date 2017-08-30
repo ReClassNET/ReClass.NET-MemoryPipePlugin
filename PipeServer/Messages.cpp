@@ -45,7 +45,7 @@ bool ReadMemoryMessage::Handle(MessageClient& client)
 //---------------------------------------------------------------------------
 bool WriteMemoryMessage::Handle(MessageClient& client)
 {
-	auto success = WriteMemory((void*)GetAddress(), GetData());
+	const auto success = WriteMemory(const_cast<void*>(GetAddress()), GetData());
 
 	client.Send(StatusMessage(success));
 

@@ -17,7 +17,7 @@ public:
 		SetHandle(preexistingHandle);
 	}
 
-	SafePipeHandle(SafePipeHandle&& copy)
+	SafePipeHandle(SafePipeHandle&& copy) noexcept
 		: SafeHandleZeroOrMinusOneIsInvalid(true)
 	{
 		handle = copy.handle;
@@ -26,7 +26,7 @@ public:
 		copy.handle = nullptr;
 	}
 
-	virtual ~SafePipeHandle()
+	virtual ~SafePipeHandle() override
 	{
 		if (handle != nullptr && ownsHandle)
 		{
@@ -36,7 +36,7 @@ public:
 		}
 	}
 
-	SafePipeHandle& operator=(SafePipeHandle&& copy)
+	SafePipeHandle& operator=(SafePipeHandle&& copy) noexcept
 	{
 		handle = copy.handle;
 
@@ -72,8 +72,8 @@ enum class PipeTransmissionMode
 enum class PipeOptions
 {
 	None = 0x0,
-	WriteThrough = (int)0x80000000,
-	Asynchronous = (int)0x40000000,
+	WriteThrough = static_cast<int>(0x80000000),
+	Asynchronous = static_cast<int>(0x40000000),
 };
 
 enum class PipeState
@@ -99,7 +99,7 @@ public:
 
 	virtual int ReadByte() override;
 
-	virtual void Write(const uint8_t* buffer, int offset, int count);
+	void Write(const uint8_t* buffer, int offset, int count) override;
 
 	virtual void WriteByte(uint8_t value) override;
 
@@ -112,11 +112,11 @@ private:
 
 	int ReadCore(uint8_t* buffer, int offset, int count);
 
-	int ReadFileNative(const SafePipeHandle& handle, uint8_t* buffer, int offset, int count, int& hr);
+	static int ReadFileNative(const SafePipeHandle& handle, uint8_t* buffer, int offset, int count, int& hr);
 
-	void WriteCore(const uint8_t* buffer, int offset, int count);
+	void WriteCore(const uint8_t* buffer, int offset, int count) const;
 
-	int WriteFileNative(const SafePipeHandle& handle, const uint8_t* buffer, int offset, int count, int& hr);
+	static int WriteFileNative(const SafePipeHandle& handle, const uint8_t* buffer, int offset, int count, int& hr);
 
 protected:
 	SafePipeHandle handle;

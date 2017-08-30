@@ -5,17 +5,14 @@
 class Stream
 {
 public:
-	virtual ~Stream()
-	{
-
-	}
+	virtual ~Stream() = default;
 	//---------------------------------------------------------------------------
 	virtual int Read(uint8_t* buffer, int offset, int count) = 0;
 	//---------------------------------------------------------------------------
 	virtual int ReadByte()
 	{
 		uint8_t oneByteArray[1];
-		int r = Read(oneByteArray, 0, 1);
+		const int r = Read(oneByteArray, 0, 1);
 		if (r == 0)
 		{
 			return -1;

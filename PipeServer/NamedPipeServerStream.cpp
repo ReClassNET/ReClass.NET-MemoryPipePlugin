@@ -14,7 +14,7 @@ NamedPipeServerStream::NamedPipeServerStream(const std::wstring& pipeName, PipeD
 NamedPipeServerStream::NamedPipeServerStream(const std::wstring& pipeName, PipeDirection direction, int maxNumberOfServerInstances, PipeTransmissionMode transmissionMode, int inBufferSize, int outBufferSize)
 	: PipeStream(direction, transmissionMode)
 {
-	auto normalizedPipePath = (fs::path("\\\\.\\pipe") / pipeName).wstring();
+	const auto normalizedPipePath = (fs::path("\\\\.\\pipe") / pipeName).wstring();
 
 	Create(normalizedPipePath, direction, maxNumberOfServerInstances, transmissionMode, inBufferSize, outBufferSize);
 }
@@ -26,14 +26,14 @@ NamedPipeServerStream::~NamedPipeServerStream()
 //---------------------------------------------------------------------------
 void NamedPipeServerStream::Create(const std::wstring& fullPipeName, PipeDirection direction, int maxNumberOfServerInstances, PipeTransmissionMode transmissionMode, int inBufferSize, int outBufferSize)
 {
-	int pipeModes = (int)transmissionMode << 2 | (int)transmissionMode << 1;
+	const int pipeModes = static_cast<int>(transmissionMode) << 2 | static_cast<int>(transmissionMode) << 1;
 
 	if (maxNumberOfServerInstances == MaxAllowedServerInstances)
 	{
 		maxNumberOfServerInstances = 255;
 	}
 
-	handle = SafePipeHandle(CreateNamedPipeW(fullPipeName.c_str(), (int)direction, pipeModes, maxNumberOfServerInstances, outBufferSize, inBufferSize, 0, nullptr), true);
+	handle = SafePipeHandle(CreateNamedPipeW(fullPipeName.c_str(), static_cast<int>(direction), pipeModes, maxNumberOfServerInstances, outBufferSize, inBufferSize, 0, nullptr), true);
 
 	if (handle.IsInvalid())
 	{
@@ -47,7 +47,7 @@ void NamedPipeServerStream::WaitForConnection()
 
 	if (!ConnectNamedPipe(handle.GetHandle(), nullptr))
 	{
-		int errorCode = GetLastError();
+		const int errorCode = GetLastError();
 		if (errorCode != ERROR_PIPE_CONNECTED)
 		{
 			throw IOException(errorCode);
@@ -73,7 +73,7 @@ void NamedPipeServerStream::Disconnect()
 	state = PipeState::Disconnected;
 }
 //---------------------------------------------------------------------------
-void NamedPipeServerStream::CheckConnectOperationsServer()
+void NamedPipeServerStream::CheckConnectOperationsServer() const
 {
 	if (state == PipeState::Closed || state == PipeState::Broken)
 	{
@@ -81,7 +81,7 @@ void NamedPipeServerStream::CheckConnectOperationsServer()
 	}
 }
 //---------------------------------------------------------------------------
-void NamedPipeServerStream::CheckDisconnectOperations()
+void NamedPipeServerStream::CheckDisconnectOperations() const
 {
 	if (state == PipeState::WaitingToConnect || state == PipeState::Disconnected || state == PipeState::Closed)
 	{

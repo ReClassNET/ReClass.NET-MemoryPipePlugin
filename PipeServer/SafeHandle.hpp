@@ -12,10 +12,7 @@ protected:
 	}
 
 public:
-	virtual ~SafeHandle()
-	{
-
-	}
+	virtual ~SafeHandle() = default;
 
 	virtual bool IsInvalid() = 0;
 
@@ -44,7 +41,7 @@ protected:
 	}
 
 public:
-	virtual bool IsInvalid()
+	virtual bool IsInvalid() override
 	{
 		return handle == nullptr || handle == INVALID_HANDLE_VALUE;
 	}

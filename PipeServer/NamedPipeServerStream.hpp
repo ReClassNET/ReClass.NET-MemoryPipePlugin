@@ -11,7 +11,7 @@ public:
 
 	NamedPipeServerStream(const std::wstring& pipeName, PipeDirection direction, int maxNumberOfServerInstances, PipeTransmissionMode transmissionMode, int inBufferSize, int outBufferSize);
 
-	~NamedPipeServerStream();
+	virtual ~NamedPipeServerStream() override;
 
 private:
 	void Create(const std::wstring& fullPipeName, PipeDirection direction, int maxNumberOfServerInstances, PipeTransmissionMode transmissionMode, int inBufferSize, int outBufferSize);
@@ -22,7 +22,7 @@ public:
 	void Disconnect();
 
 private:
-	void CheckConnectOperationsServer();
+	void CheckConnectOperationsServer() const;
 
-	void CheckDisconnectOperations();
+	void CheckDisconnectOperations() const;
 };

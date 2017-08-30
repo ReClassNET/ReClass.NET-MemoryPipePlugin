@@ -20,8 +20,8 @@ MemoryStream::MemoryStream(int _capacity)
 //---------------------------------------------------------------------------
 MemoryStream::MemoryStream(const std::vector<uint8_t>& _buffer)
 	: buffer(_buffer),
-	  length((int)_buffer.size()),
-	  capacity((int)_buffer.size()),
+	  length(static_cast<int>(_buffer.size())),
+	  capacity(static_cast<int>(_buffer.size())),
 	  position(0),
 	  isOpen(true),
 	  isExpandable(false)
@@ -75,7 +75,7 @@ int MemoryStream::GetLength() const
 	{
 		throw IOException();
 	}
-	return (int)buffer.size();
+	return static_cast<int>(buffer.size());
 }
 //---------------------------------------------------------------------------
 int MemoryStream::GetPosition() const
@@ -131,7 +131,7 @@ void MemoryStream::Write(const uint8_t* _buffer, int offset, int count)
 		throw IOException();
 	}
 
-	int i = position + count;
+	const int i = position + count;
 	if (i < 0)
 	{
 		throw IOException();
@@ -178,9 +178,9 @@ bool MemoryStream::EnsureCapacity(int value)
 			newCapacity = capacity * 2;
 		}
 
-		if ((unsigned int)(capacity * 2) > MaxByteArrayLength)
+		if (static_cast<unsigned int>(capacity * 2) > MaxByteArrayLength)
 		{
-			newCapacity = (unsigned int)value > MaxByteArrayLength ? value : MaxByteArrayLength;
+			newCapacity = static_cast<unsigned int>(value) > MaxByteArrayLength ? value : MaxByteArrayLength;
 		}
 
 		SetCapacity(newCapacity);

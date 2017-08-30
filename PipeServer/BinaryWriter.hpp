@@ -11,9 +11,9 @@ public:
 
 	void Write(bool value);
 
-	void Write(uint8_t value);
+	void Write(uint8_t value) const;
 
-	void Write(const uint8_t* buffer, int offset, int length);
+	void Write(const uint8_t* buffer, int offset, int length) const;
 
 	void Write(short value);
 
@@ -33,10 +33,10 @@ public:
 
 	void Write(double value);
 
-	void Write(const std::wstring& value);
+	void Write(const std::wstring& value) const;
 
 private:
-	void Write7BitEncodedInt(int value);
+	void Write7BitEncodedInt(int value) const;
 
 	Stream& output;
 	uint8_t buffer[8];

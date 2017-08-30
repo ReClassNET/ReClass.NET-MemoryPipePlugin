@@ -12,6 +12,8 @@ class MessageClient;
 class IMessage
 {
 public:
+	virtual ~IMessage() = default;
+
 	virtual int GetMessageType() const = 0;
 
 	virtual void ReadFrom(BinaryReader& br) = 0;
@@ -121,10 +123,10 @@ public:
 	virtual int GetMessageType() const override { return StaticMessageType; }
 
 	const void* GetAddress() const { return address; }
-	const int GetSize() const { return size; }
+	int GetSize() const { return size; }
 
 	ReadMemoryMessage()
-		: address(0),
+		: address(nullptr),
 		  size(0)
 	{
 
@@ -177,14 +179,14 @@ public:
 
 	virtual void ReadFrom(BinaryReader& reader) override
 	{
-		auto size = reader.ReadInt32();
+		const auto size = reader.ReadInt32();
 		data = reader.ReadBytes(size);
 	}
 
 	virtual void WriteTo(BinaryWriter& writer) const override
 	{
-		writer.Write((int)data.size());
-		writer.Write(data.data(), 0, (int)data.size());
+		writer.Write(static_cast<int>(data.size()));
+		writer.Write(data.data(), 0, static_cast<int>(data.size()));
 	}
 
 private:
@@ -201,6 +203,7 @@ public:
 	const std::vector<uint8_t>& GetData() const { return data; }
 
 	WriteMemoryMessage()
+		: address(nullptr)
 	{
 
 	}
@@ -215,15 +218,15 @@ public:
 	virtual void ReadFrom(BinaryReader& reader) override
 	{
 		address = reader.ReadIntPtr();
-		auto size = reader.ReadInt32();
+		const auto size = reader.ReadInt32();
 		data = reader.ReadBytes(size);
 	}
 
 	virtual void WriteTo(BinaryWriter& writer) const override
 	{
 		writer.Write(address);
-		writer.Write((int)data.size());
-		writer.Write(data.data(), 0, (int)data.size());
+		writer.Write(static_cast<int>(data.size()));
+		writer.Write(data.data(), 0, static_cast<int>(data.size()));
 	}
 
 	virtual bool Handle(MessageClient& client) override;
@@ -267,8 +270,8 @@ public:
 	const std::wstring& GetModulePath() const { return modulePath; }
 
 	EnumerateRemoteSectionCallbackMessage()
-		: baseAddress(0),
-		  size(0),
+		: baseAddress(nullptr),
+		  size(nullptr),
 		  type(SectionType::Unknown),
 		  category(SectionCategory::Unknown),
 		  protection(SectionProtection::NoAccess)
@@ -292,9 +295,9 @@ public:
 	{
 		baseAddress = reader.ReadIntPtr();
 		size = reader.ReadIntPtr();
-		type = (SectionType)reader.ReadInt32();
-		category = (SectionCategory)reader.ReadInt32();
-		protection = (SectionProtection)reader.ReadInt32();
+		type = static_cast<SectionType>(reader.ReadInt32());
+		category = static_cast<SectionCategory>(reader.ReadInt32());
+		protection = static_cast<SectionProtection>(reader.ReadInt32());
 		name = reader.ReadString();
 		modulePath = reader.ReadString();
 	}
@@ -303,9 +306,9 @@ public:
 	{
 		writer.Write(baseAddress);
 		writer.Write(size);
-		writer.Write((int)type);
-		writer.Write((int)category);
-		writer.Write((int)protection);
+		writer.Write(static_cast<int>(type));
+		writer.Write(static_cast<int>(category));
+		writer.Write(static_cast<int>(protection));
 		writer.Write(name);
 		writer.Write(modulePath);
 	}
@@ -331,8 +334,8 @@ public:
 	const std::wstring& GetModulePath() const { return modulePath; }
 
 	EnumerateRemoteModuleCallbackMessage()
-		: baseAddress(0),
-		  size(0)
+		: baseAddress(nullptr),
+		  size(nullptr)
 	{
 
 	}

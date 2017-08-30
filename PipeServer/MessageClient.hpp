@@ -6,7 +6,6 @@
 
 #include "PipeStream.hpp"
 #include "Messages.hpp"
-#include "MemoryStream.hpp"
 
 class MessageClient
 {
@@ -17,7 +16,7 @@ public:
 
 	std::unique_ptr<IMessage> Receive();
 
-	void Send(const IMessage& message);
+	void Send(const IMessage& message) const;
 
 private:
 	PipeStream& pipe;

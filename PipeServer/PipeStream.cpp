@@ -8,16 +8,16 @@ PipeStream::PipeStream(PipeDirection direction)
 }
 //---------------------------------------------------------------------------
 PipeStream::PipeStream(PipeDirection direction, PipeTransmissionMode transmissionMode)
-	: readMode(transmissionMode),
-	  pipeDirection(direction),
+	: state(PipeState::WaitingToConnect),
 	  isMessageComplete(true),
-	  state(PipeState::WaitingToConnect)
+	  readMode(transmissionMode),
+	  pipeDirection(direction)
 {
-	if ((int)(pipeDirection & PipeDirection::In) != 0)
+	if (static_cast<int>(pipeDirection & PipeDirection::In) != 0)
 	{
 		canRead = true;
 	}
-	if ((int)(pipeDirection & PipeDirection::Out) != 0)
+	if (static_cast<int>(pipeDirection & PipeDirection::Out) != 0)
 	{
 		canWrite = true;
 	}
@@ -50,14 +50,14 @@ int PipeStream::ReadByte()
 	CheckReadOperations();
 
 	uint8_t buffer[1];
-	int n = ReadCore(buffer, 0, 1);
+	const int n = ReadCore(buffer, 0, 1);
 
 	if (n == 0)
 	{
 		return -1;
 	}
 
-	return (int)buffer[0];
+	return static_cast<int>(buffer[0]);
 }
 //---------------------------------------------------------------------------
 void PipeStream::Write(const uint8_t* buffer, int offset, int count)
@@ -151,7 +151,7 @@ int PipeStream::ReadFileNative(const SafePipeHandle& handle, uint8_t* buffer, in
 	}
 
 	DWORD numBytesRead = 0;
-	int r = ReadFile(handle.GetHandle(), buffer + offset, count, &numBytesRead, nullptr);
+	const int r = ReadFile(handle.GetHandle(), buffer + offset, count, &numBytesRead, nullptr);
 	if (r == 0)
 	{
 		hr = GetLastError();
@@ -171,10 +171,10 @@ int PipeStream::ReadFileNative(const SafePipeHandle& handle, uint8_t* buffer, in
 	return numBytesRead;
 }
 //---------------------------------------------------------------------------
-void PipeStream::WriteCore(const uint8_t* buffer, int offset, int count)
+void PipeStream::WriteCore(const uint8_t* buffer, int offset, int count) const
 {
 	int hr = 0;
-	int r = WriteFileNative(handle, buffer, offset, count, hr);
+	const int r = WriteFileNative(handle, buffer, offset, count, hr);
 
 	if (r == -1)
 	{
@@ -191,7 +191,7 @@ int PipeStream::WriteFileNative(const SafePipeHandle& handle, const uint8_t* buf
 	}
 
 	DWORD numBytesWritten = 0;
-	int r = WriteFile(handle.GetHandle(), buffer + offset, count, &numBytesWritten, nullptr);
+	const int r = WriteFile(handle.GetHandle(), buffer + offset, count, &numBytesWritten, nullptr);
 	if (r == 0)
 	{
 		hr = GetLastError();

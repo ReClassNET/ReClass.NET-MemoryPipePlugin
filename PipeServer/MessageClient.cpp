@@ -1,4 +1,5 @@
 #include "MessageClient.hpp"
+#include "MemoryStream.hpp"
 
 MessageClient::MessageClient(PipeStream& _pipe)
 	: pipe(_pipe)
@@ -17,16 +18,16 @@ std::unique_ptr<IMessage> MessageClient::Receive()
 	std::vector<uint8_t> buffer(256);
 	do
 	{
-		auto length = pipe.Read(buffer.data(), 0, (int)buffer.size());
+		const auto length = pipe.Read(buffer.data(), 0, static_cast<int>(buffer.size()));
 		ms.Write(buffer.data(), 0, length);
 	} while (!pipe.IsMessageComplete());
 
 	ms.SetPosition(0);
 
 	BinaryReader br(ms);
-	auto type = br.ReadInt32();
+	const auto type = br.ReadInt32();
 
-	auto it = registeredMessages.find(type);
+	const auto it = registeredMessages.find(type);
 	if (it != std::end(registeredMessages))
 	{
 		auto message = it->second();
@@ -38,7 +39,7 @@ std::unique_ptr<IMessage> MessageClient::Receive()
 	return nullptr;
 }
 //---------------------------------------------------------------------------
-void MessageClient::Send(const IMessage& message)
+void MessageClient::Send(const IMessage& message) const
 {
 	MemoryStream ms;
 	BinaryWriter bw(ms);
@@ -47,6 +48,6 @@ void MessageClient::Send(const IMessage& message)
 	message.WriteTo(bw);
 
 	auto data = ms.ToArray();
-	pipe.Write(data.data(), 0, (int)data.size());
+	pipe.Write(data.data(), 0, static_cast<int>(data.size()));
 }
 //---------------------------------------------------------------------------

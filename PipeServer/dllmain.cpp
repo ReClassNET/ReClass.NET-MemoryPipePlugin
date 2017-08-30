@@ -41,7 +41,7 @@ MessageClient CreateClient(NamedPipeServerStream& pipe)
 //---------------------------------------------------------------------------
 void PipeThread(void*)
 {
-	auto name = CreatePipeName();
+	const auto name = CreatePipeName();
 	
 	while (true)
 	{

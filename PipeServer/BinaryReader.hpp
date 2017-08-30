@@ -12,9 +12,9 @@ public:
 
 	bool ReadBoolean();
 
-	uint8_t ReadByte();
+	uint8_t ReadByte() const;
 
-	std::vector<uint8_t> ReadBytes(int count);
+	std::vector<uint8_t> ReadBytes(int count) const;
 
 	short ReadInt16();
 
@@ -34,12 +34,12 @@ public:
 
 	double ReadDouble();
 
-	std::wstring ReadString();
+	std::wstring ReadString() const;
 
 private:
 	void FillBuffer(int numBytes);
 
-	int Read7BitEncodedInt();
+	int Read7BitEncodedInt() const;
 
 	Stream& input;
 	uint8_t buffer[8];

@@ -8,7 +8,7 @@
 
 bool IsValidMemoryRange(LPCVOID address, int length)
 {
-	auto endAddress = static_cast<const uint8_t*>(address) + length;
+	const auto endAddress = static_cast<const uint8_t*>(address) + length;
 
 	do
 	{
@@ -36,7 +36,7 @@ bool IsValidMemoryRange(LPCVOID address, int length)
 			return false;
 		}
 
-		address = (uint8_t*)info.BaseAddress + info.RegionSize;
+		address = static_cast<uint8_t*>(info.BaseAddress) + info.RegionSize;
 	} while (endAddress > address);
 
 	return true;
@@ -44,7 +44,7 @@ bool IsValidMemoryRange(LPCVOID address, int length)
 //---------------------------------------------------------------------------
 bool ReadMemory(LPCVOID address, std::vector<uint8_t>& buffer)
 {
-	if (!IsValidMemoryRange(address, (int)buffer.size()))
+	if (!IsValidMemoryRange(address, static_cast<int>(buffer.size())))
 	{
 		return false;
 	}
@@ -56,7 +56,7 @@ bool ReadMemory(LPCVOID address, std::vector<uint8_t>& buffer)
 //---------------------------------------------------------------------------
 bool WriteMemory(LPVOID address, const std::vector<uint8_t>& buffer)
 {
-	if (!IsValidMemoryRange(address, (int)buffer.size()))
+	if (!IsValidMemoryRange(address, static_cast<int>(buffer.size())))
 	{
 		return false;
 	}
@@ -82,7 +82,7 @@ void EnumerateRemoteSectionsAndModules(const std::function<void(RC_Pointer, RC_P
 	MEMORY_BASIC_INFORMATION memInfo = { 0 };
 	memInfo.RegionSize = 0x1000;
 	size_t address = 0;
-	while (VirtualQuery((LPCVOID)address, &memInfo, sizeof(MEMORY_BASIC_INFORMATION)) != 0 && address + memInfo.RegionSize > address)
+	while (VirtualQuery(reinterpret_cast<LPCVOID>(address), &memInfo, sizeof(MEMORY_BASIC_INFORMATION)) != 0 && address + memInfo.RegionSize > address)
 	{
 		if (memInfo.State == MEM_COMMIT)
 		{
@@ -135,7 +135,7 @@ void EnumerateRemoteSectionsAndModules(const std::function<void(RC_Pointer, RC_P
 
 			sections.push_back(std::move(section));
 		}
-		address = (size_t)memInfo.BaseAddress + memInfo.RegionSize;
+		address = reinterpret_cast<size_t>(memInfo.BaseAddress) + memInfo.RegionSize;
 	}
 
 	struct UNICODE_STRING
@@ -185,30 +185,30 @@ void EnumerateRemoteSectionsAndModules(const std::function<void(RC_Pointer, RC_P
 
 	// Second enumerate all modules.
 #ifdef _WIN64
-	auto peb = reinterpret_cast<PEB*>(__readgsqword(0x60));
+	const auto peb = reinterpret_cast<PEB*>(__readgsqword(0x60));
 #else
-	auto peb = reinterpret_cast<PEB*>(__readfsdword(0x30));
+	const auto peb = reinterpret_cast<PEB*>(__readfsdword(0x30));
 #endif
 	auto ldr = reinterpret_cast<LDR_MODULE*>(peb->LoaderData->InLoadOrderModuleList.Flink);
 	while (ldr->BaseAddress != nullptr)
 	{
-		moduleCallback((RC_Pointer)ldr->BaseAddress, (RC_Pointer)(intptr_t)ldr->SizeOfImage, ldr->FullDllName.Buffer);
+		moduleCallback(static_cast<RC_Pointer>(ldr->BaseAddress), reinterpret_cast<RC_Pointer>(static_cast<intptr_t>(ldr->SizeOfImage)), ldr->FullDllName.Buffer);
 
-		auto it = std::lower_bound(std::begin(sections), std::end(sections), ldr->BaseAddress, [&sections](const auto& lhs, const LPVOID& rhs)
+		const auto it = std::lower_bound(std::begin(sections), std::end(sections), ldr->BaseAddress, [&sections](const auto& lhs, const LPVOID& rhs)
 		{
 			return lhs.BaseAddress < rhs;
 		});
 
-		auto dosHeader = reinterpret_cast<IMAGE_DOS_HEADER*>(ldr->BaseAddress);
-		auto ntHeader = reinterpret_cast<IMAGE_NT_HEADERS*>((intptr_t)ldr->BaseAddress + dosHeader->e_lfanew);
+		const auto dosHeader = reinterpret_cast<IMAGE_DOS_HEADER*>(ldr->BaseAddress);
+		const auto ntHeader = reinterpret_cast<IMAGE_NT_HEADERS*>(reinterpret_cast<intptr_t>(ldr->BaseAddress) + dosHeader->e_lfanew);
 
 		int i = 0;
 		for (auto sectionHeader = IMAGE_FIRST_SECTION(ntHeader); i < ntHeader->FileHeader.NumberOfSections; i++, sectionHeader++)
 		{
-			auto sectionAddress = (intptr_t)ldr->BaseAddress + (intptr_t)sectionHeader->VirtualAddress;
+			const auto sectionAddress = reinterpret_cast<intptr_t>(ldr->BaseAddress) + static_cast<intptr_t>(sectionHeader->VirtualAddress);
 			for (auto j = it; j != std::end(sections); ++j)
 			{
-				if (sectionAddress >= (intptr_t)j->BaseAddress && sectionAddress < (intptr_t)j->BaseAddress + (intptr_t)j->Size)
+				if (sectionAddress >= reinterpret_cast<intptr_t>(j->BaseAddress) && sectionAddress < reinterpret_cast<intptr_t>(j->BaseAddress) + static_cast<intptr_t>(j->Size))
 				{
 					// Copy the name because it is not null padded.
 					char buffer[IMAGE_SIZEOF_SHORT_NAME + 1] = { 0 };
@@ -236,7 +236,7 @@ void EnumerateRemoteSectionsAndModules(const std::function<void(RC_Pointer, RC_P
 
 	for (auto&& section : sections)
 	{
-		sectionCallback(section.BaseAddress, (RC_Pointer)section.Size, section.Type, section.Category, section.Protection, section.Name, section.ModulePath);
+		sectionCallback(section.BaseAddress, reinterpret_cast<RC_Pointer>(section.Size), section.Type, section.Category, section.Protection, section.Name, section.ModulePath);
 	}
 }
 //---------------------------------------------------------------------------
