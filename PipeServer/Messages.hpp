@@ -4,8 +4,8 @@
 
 #include "ReClassNET_Plugin.hpp"
 
-#include "BinaryReader.hpp"
-#include "BinaryWriter.hpp"
+#include "PipeStream/BinaryReader.hpp"
+#include "PipeStream/BinaryWriter.hpp"
 
 class MessageClient;
 

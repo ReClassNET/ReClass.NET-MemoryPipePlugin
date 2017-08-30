@@ -146,28 +146,28 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="BinaryReader.cpp" />
-    <ClCompile Include="BinaryWriter.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="MemoryHelper.cpp" />
-    <ClCompile Include="MemoryStream.cpp" />
     <ClCompile Include="MessageClient.cpp" />
     <ClCompile Include="Messages.cpp" />
-    <ClCompile Include="NamedPipeServerStream.cpp" />
-    <ClCompile Include="PipeStream.cpp" />
+    <ClCompile Include="PipeStream\BinaryReader.cpp" />
+    <ClCompile Include="PipeStream\BinaryWriter.cpp" />
+    <ClCompile Include="PipeStream\MemoryStream.cpp" />
+    <ClCompile Include="PipeStream\NamedPipeServerStream.cpp" />
+    <ClCompile Include="PipeStream\PipeStream.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BinaryReader.hpp" />
-    <ClInclude Include="BinaryWriter.hpp" />
-    <ClInclude Include="Exceptions.hpp" />
-    <ClInclude Include="MemoryStream.hpp" />
     <ClInclude Include="MessageClient.hpp" />
     <ClInclude Include="Messages.hpp" />
-    <ClInclude Include="NamedPipeServerStream.hpp" />
-    <ClInclude Include="PipeStream.hpp" />
+    <ClInclude Include="PipeStream\BinaryReader.hpp" />
+    <ClInclude Include="PipeStream\BinaryWriter.hpp" />
+    <ClInclude Include="PipeStream\Exceptions.hpp" />
+    <ClInclude Include="PipeStream\MemoryStream.hpp" />
+    <ClInclude Include="PipeStream\NamedPipeServerStream.hpp" />
+    <ClInclude Include="PipeStream\PipeStream.hpp" />
+    <ClInclude Include="PipeStream\SafeHandle.hpp" />
+    <ClInclude Include="PipeStream\Stream.hpp" />
     <ClInclude Include="ReClassNET_Plugin.hpp" />
-    <ClInclude Include="SafeHandle.hpp" />
-    <ClInclude Include="Stream.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

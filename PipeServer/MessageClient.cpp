@@ -1,5 +1,5 @@
 #include "MessageClient.hpp"
-#include "MemoryStream.hpp"
+#include "PipeStream/MemoryStream.hpp"
 
 MessageClient::MessageClient(PipeStream& _pipe)
 	: pipe(_pipe)

@@ -4,7 +4,7 @@
 #include <memory>
 #include <functional>
 
-#include "PipeStream.hpp"
+#include "PipeStream/PipeStream.hpp"
 #include "Messages.hpp"
 
 class MessageClient
