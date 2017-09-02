@@ -7,11 +7,6 @@ MessageClient::MessageClient(PipeStream& _pipe)
 
 }
 //---------------------------------------------------------------------------
-void MessageClient::RegisterMessage(int type, const std::function<std::unique_ptr<IMessage>()>& creator)
-{
-	registeredMessages[type] = creator;
-}
-//---------------------------------------------------------------------------
 std::unique_ptr<IMessage> MessageClient::Receive()
 {
 	MemoryStream ms;
@@ -25,7 +20,7 @@ std::unique_ptr<IMessage> MessageClient::Receive()
 	ms.SetPosition(0);
 
 	BinaryReader br(ms);
-	const auto type = br.ReadInt32();
+	const auto type = static_cast<MessageType>(br.ReadInt32());
 
 	const auto it = registeredMessages.find(type);
 	if (it != std::end(registeredMessages))
@@ -44,7 +39,7 @@ void MessageClient::Send(const IMessage& message) const
 	MemoryStream ms;
 	BinaryWriter bw(ms);
 
-	bw.Write(message.GetMessageType());
+	bw.Write(static_cast<int>(message.GetMessageType()));
 	message.WriteTo(bw);
 
 	auto data = ms.ToArray();

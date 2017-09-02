@@ -67,6 +67,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="HandleAbuserPluginExt.CoreProcessFunctions.cs" />
     <Compile Include="MemoryPipePluginExt.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="MessageClient.cs" />

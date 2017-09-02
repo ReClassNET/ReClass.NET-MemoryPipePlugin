@@ -79,7 +79,7 @@ void EnumerateRemoteSectionsAndModules(const std::function<void(RC_Pointer, RC_P
 	std::vector<EnumerateRemoteSectionData> sections;
 
 	// First enumerate all memory sections.
-	MEMORY_BASIC_INFORMATION memInfo = { 0 };
+	MEMORY_BASIC_INFORMATION memInfo = { };
 	memInfo.RegionSize = 0x1000;
 	size_t address = 0;
 	while (VirtualQuery(reinterpret_cast<LPCVOID>(address), &memInfo, sizeof(MEMORY_BASIC_INFORMATION)) != 0 && address + memInfo.RegionSize > address)

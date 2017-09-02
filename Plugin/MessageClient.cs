@@ -7,19 +7,31 @@ using System.Text;
 
 namespace MemoryPipePlugin
 {
-	class MessageClient
+	internal class MessageClient : IDisposable
 	{
 		private readonly PipeStream pipe;
-		public PipeStream Pipe => pipe;
 
-		private readonly Dictionary<int, Func<IMessage>> registeredMessages = new Dictionary<int, Func<IMessage>>();
-		public IDictionary<int, Func<IMessage>> RegisteredMessages => registeredMessages;
+		private readonly Dictionary<MessageType, Func<IMessage>> registeredMessages = new Dictionary<MessageType, Func<IMessage>>();
+
+		public IntPtr Id => pipe.SafePipeHandle.DangerousGetHandle();
 
 		public MessageClient(PipeStream pipe)
 		{
 			Contract.Requires(pipe != null);
 
 			this.pipe = pipe;
+		}
+
+		public void Dispose()
+		{
+			pipe?.Dispose();
+		}
+
+		public void RegisterMessage<T>() where T : IMessage, new()
+		{
+			IMessage MessageCreator() => new T();
+
+			registeredMessages.Add(MessageCreator().MessageType, MessageCreator);
 		}
 
 		public IMessage Receive()
@@ -38,7 +50,7 @@ namespace MemoryPipePlugin
 
 				using (var br = new BinaryReader(ms, Encoding.Unicode, true))
 				{
-					var type = br.ReadInt32();
+					var type = (MessageType)br.ReadInt32();
 
 					Func<IMessage> createFn;
 					if (registeredMessages.TryGetValue(type, out createFn))
@@ -61,7 +73,7 @@ namespace MemoryPipePlugin
 			{
 				using (var bw = new BinaryWriter(ms, Encoding.Unicode, true))
 				{
-					bw.Write(message.MessageType);
+					bw.Write((int)message.MessageType);
 					message.WriteTo(bw);
 				}
 

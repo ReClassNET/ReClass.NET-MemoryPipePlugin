@@ -6,24 +6,35 @@ using ReClassNET.Util;
 
 namespace MemoryPipePlugin
 {
-	interface IMessage
+	internal enum MessageType
 	{
-		int MessageType { get; }
+		StatusResponse = 1,
+		OpenProcessRequest = 2,
+		CloseProcessRequest = 3,
+		IsValidRequest = 4,
+		ReadMemoryRequest = 5,
+		ReadMemoryResponse = 6,
+		WriteMemoryRequest = 7,
+		EnumerateRemoteSectionsAndModulesRequest = 8,
+		EnumerateRemoteSectionResponse = 9,
+		EnumerateRemoteModuleResponse = 10,
+		EnumerateProcessHandlesRequest = 11,
+		EnumerateProcessHandlesResponse = 12,
+		ClosePipeRequest = 13
+	}
+
+	internal interface IMessage
+	{
+		MessageType MessageType { get; }
 
 		void ReadFrom(BinaryReader reader);
 		void WriteTo(BinaryWriter writer);
 	}
 
 	[ContractClassFor(typeof(IMessage))]
-	internal class ICodeGeneratorContract : IMessage
+	internal class MessageContract : IMessage
 	{
-		public int MessageType
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public MessageType MessageType => throw new NotImplementedException();
 
 		public void ReadFrom(BinaryReader reader)
 		{
@@ -40,19 +51,18 @@ namespace MemoryPipePlugin
 		}
 	}
 
-	class StatusMessage : IMessage
+	internal class StatusResponse : IMessage
 	{
-		public static int StaticType = 1;
-		public int MessageType => StaticType;
+		public MessageType MessageType => MessageType.StatusResponse;
 
 		public bool Success { get; private set; }
 
-		public StatusMessage()
+		public StatusResponse()
 		{
 
 		}
 
-		public StatusMessage(bool success)
+		public StatusResponse(bool success)
 		{
 			Success = success;
 		}
@@ -68,10 +78,9 @@ namespace MemoryPipePlugin
 		}
 	}
 
-	class OpenProcessMessage : IMessage
+	internal class OpenProcessRequest : IMessage
 	{
-		public static int StaticType = 2;
-		public int MessageType => StaticType;
+		public MessageType MessageType => MessageType.OpenProcessRequest;
 
 		public void ReadFrom(BinaryReader reader)
 		{
@@ -84,10 +93,9 @@ namespace MemoryPipePlugin
 		}
 	}
 
-	class CloseProcessMessage : IMessage
+	internal class CloseProcessRequest : IMessage
 	{
-		public static int StaticType = 3;
-		public int MessageType => StaticType;
+		public MessageType MessageType => MessageType.CloseProcessRequest;
 
 		public void ReadFrom(BinaryReader reader)
 		{
@@ -100,10 +108,9 @@ namespace MemoryPipePlugin
 		}
 	}
 
-	class IsValidMessage : IMessage
+	internal class IsValidRequest : IMessage
 	{
-		public static int StaticType = 4;
-		public int MessageType => StaticType;
+		public MessageType MessageType => MessageType.IsValidRequest;
 
 		public void ReadFrom(BinaryReader reader)
 		{
@@ -116,20 +123,19 @@ namespace MemoryPipePlugin
 		}
 	}
 
-	class ReadMemoryMessage : IMessage
+	internal class ReadMemoryRequest : IMessage
 	{
-		public static int StaticType = 5;
-		public int MessageType => StaticType;
+		public MessageType MessageType => MessageType.ReadMemoryRequest;
 
 		public IntPtr Address { get; private set; }
 		public int Size { get; private set; }
 
-		public ReadMemoryMessage()
+		public ReadMemoryRequest()
 		{
 
 		}
 
-		public ReadMemoryMessage(IntPtr address, int size)
+		public ReadMemoryRequest(IntPtr address, int size)
 		{
 			Address = address;
 			Size = size;
@@ -148,19 +154,18 @@ namespace MemoryPipePlugin
 		}
 	}
 
-	class ReadMemoryDataMessage : IMessage
+	internal class ReadMemoryResponse : IMessage
 	{
-		public static int StaticType = 6;
-		public int MessageType => StaticType;
+		public MessageType MessageType => MessageType.ReadMemoryResponse;
 
 		public byte[] Data { get; private set; }
 
-		public ReadMemoryDataMessage()
+		public ReadMemoryResponse()
 		{
 
 		}
 
-		public ReadMemoryDataMessage(byte[] data)
+		public ReadMemoryResponse(byte[] data)
 		{
 			Data = data;
 		}
@@ -178,20 +183,19 @@ namespace MemoryPipePlugin
 		}
 	}
 
-	class WriteMemoryMessage : IMessage
+	internal class WriteMemoryRequest : IMessage
 	{
-		public static int StaticType = 7;
-		public int MessageType => StaticType;
+		public MessageType MessageType => MessageType.WriteMemoryRequest;
 
 		public IntPtr Address { get; private set; }
 		public byte[] Data { get; private set; }
 
-		public WriteMemoryMessage()
+		public WriteMemoryRequest()
 		{
 
 		}
 
-		public WriteMemoryMessage(IntPtr address, byte[] data)
+		public WriteMemoryRequest(IntPtr address, byte[] data)
 		{
 			Address = address;
 			Data = data;
@@ -212,10 +216,9 @@ namespace MemoryPipePlugin
 		}
 	}
 
-	class EnumerateRemoteSectionsAndModulesMessage : IMessage
+	internal class EnumerateRemoteSectionsAndModulesRequest : IMessage
 	{
-		public static int StaticType = 8;
-		public int MessageType => StaticType;
+		public MessageType MessageType => MessageType.EnumerateRemoteSectionsAndModulesRequest;
 
 		public void ReadFrom(BinaryReader reader)
 		{
@@ -228,10 +231,9 @@ namespace MemoryPipePlugin
 		}
 	}
 
-	class EnumerateRemoteSectionCallbackMessage : IMessage
+	internal class EnumerateRemoteSectionResponse : IMessage
 	{
-		public static int StaticMessageType = 9;
-		public int MessageType => StaticMessageType;
+		public MessageType MessageType => MessageType.EnumerateRemoteSectionResponse;
 
 		public IntPtr BaseAddress { get; private set; }
 		public IntPtr Size { get; private set; }
@@ -241,12 +243,12 @@ namespace MemoryPipePlugin
 		public string Name { get; private set; }
 		public string ModulePath { get; private set; }
 
-		public EnumerateRemoteSectionCallbackMessage()
+		public EnumerateRemoteSectionResponse()
 		{
 
 		}
 
-		public EnumerateRemoteSectionCallbackMessage(IntPtr baseAddress, IntPtr regionSize, SectionType type, SectionCategory category, SectionProtection protection, string name, string modulePath)
+		public EnumerateRemoteSectionResponse(IntPtr baseAddress, IntPtr regionSize, SectionType type, SectionCategory category, SectionProtection protection, string name, string modulePath)
 		{
 			BaseAddress = baseAddress;
 			Size = regionSize;
@@ -280,21 +282,20 @@ namespace MemoryPipePlugin
 		}
 	}
 
-	class EnumerateRemoteModuleCallbackMessage : IMessage
+	internal class EnumerateRemoteModuleResponse : IMessage
 	{
-		public static int StaticType = 10;
-		public int MessageType => StaticType;
+		public MessageType MessageType => MessageType.EnumerateRemoteModuleResponse;
 
 		public IntPtr BaseAddress { get; private set; }
 		public IntPtr Size { get; private set; }
 		public string Path { get; private set; }
 
-		public EnumerateRemoteModuleCallbackMessage()
+		public EnumerateRemoteModuleResponse()
 		{
 
 		}
 
-		public EnumerateRemoteModuleCallbackMessage(IntPtr baseAddress, IntPtr regionSize, string path)
+		public EnumerateRemoteModuleResponse(IntPtr baseAddress, IntPtr regionSize, string path)
 		{
 			BaseAddress = baseAddress;
 			Size = regionSize;

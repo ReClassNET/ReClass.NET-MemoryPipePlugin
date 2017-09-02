@@ -26,16 +26,12 @@ MessageClient CreateClient(NamedPipeServerStream& pipe)
 {
 	MessageClient client(pipe);
 
-	client.RegisterMessage(StatusMessage::StaticMessageType, []() { return std::make_unique<StatusMessage>(); });
-	client.RegisterMessage(OpenProcessMessage::StaticMessageType, []() { return std::make_unique<OpenProcessMessage>(); });
-	client.RegisterMessage(CloseProcessMessage::StaticMessageType, []() { return std::make_unique<CloseProcessMessage>(); });
-	client.RegisterMessage(IsValidMessage::StaticMessageType, []() { return std::make_unique<IsValidMessage>(); });
-	client.RegisterMessage(ReadMemoryMessage::StaticMessageType, []() { return std::make_unique<ReadMemoryMessage>(); });
-	client.RegisterMessage(ReadMemoryDataMessage::StaticMessageType, []() { return std::make_unique<ReadMemoryDataMessage>(); });
-	client.RegisterMessage(WriteMemoryMessage::StaticMessageType, []() { return std::make_unique<WriteMemoryMessage>(); });
-	client.RegisterMessage(EnumerateRemoteSectionsAndModulesMessage::StaticMessageType, []() { return std::make_unique<EnumerateRemoteSectionsAndModulesMessage>(); });
-	client.RegisterMessage(EnumerateRemoteSectionCallbackMessage::StaticMessageType, []() { return std::make_unique<EnumerateRemoteSectionCallbackMessage>(); });
-	client.RegisterMessage(EnumerateRemoteModuleCallbackMessage::StaticMessageType, []() { return std::make_unique<EnumerateRemoteModuleCallbackMessage>(); });
+	client.RegisterMessage<OpenProcessRequest>();
+	client.RegisterMessage<CloseProcessRequest>();
+	client.RegisterMessage<IsValidRequest>();
+	client.RegisterMessage<ReadMemoryRequest>();
+	client.RegisterMessage<WriteMemoryRequest>();
+	client.RegisterMessage<EnumerateRemoteSectionsAndModulesRequest>();
 
 	return client;
 }

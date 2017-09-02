@@ -10,9 +10,15 @@
 class MessageClient
 {
 public:
-	MessageClient(PipeStream& pipe);
+	explicit MessageClient(PipeStream& pipe);
 
-	void RegisterMessage(int type, const std::function<std::unique_ptr<IMessage>()>& creator);
+	template<typename T>
+	void RegisterMessage()
+	{
+		const auto messageCreator = []() { return std::make_unique<T>(); };
+
+		registeredMessages[messageCreator()->GetMessageType()] = messageCreator;
+	}
 
 	std::unique_ptr<IMessage> Receive();
 
@@ -21,5 +27,5 @@ public:
 private:
 	PipeStream& pipe;
 
-	std::unordered_map<int, std::function<std::unique_ptr<IMessage>()>> registeredMessages;
+	std::unordered_map<MessageType, std::function<std::unique_ptr<IMessage>()>> registeredMessages;
 };
