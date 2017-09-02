@@ -4,6 +4,7 @@ namespace fs = std::experimental::filesystem;
 
 #include "PipeStream/NamedPipeServerStream.hpp"
 #include "MessageClient.hpp"
+#include "PipeStream/Exceptions.hpp"
 
 std::wstring CreatePipeName()
 {
