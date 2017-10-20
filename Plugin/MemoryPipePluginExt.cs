@@ -6,7 +6,6 @@ using System.IO;
 using System.IO.Pipes;
 using System.Linq;
 using ReClassNET.Core;
-using ReClassNET.Debugger;
 using ReClassNET.Plugins;
 
 namespace MemoryPipePlugin
@@ -15,7 +14,7 @@ namespace MemoryPipePlugin
 	{
 		private const string PipePrefix = @"\\.\pipe\";
 
-		private object sync = new object();
+		private readonly object sync = new object();
 
 		private IPluginHost host;
 
@@ -34,12 +33,7 @@ namespace MemoryPipePlugin
 				Terminate();
 			}
 
-			if (host == null)
-			{
-				throw new ArgumentNullException(nameof(host));
-			}
-
-			this.host = host;
+			this.host = host ?? throw new ArgumentNullException(nameof(host));
 
 			host.Process.CoreFunctions.RegisterFunctions("Memory Pipe", this);
 
@@ -64,8 +58,7 @@ namespace MemoryPipePlugin
 		/// <returns>The client or null if the identifier doesn't exist.</returns>
 		private MessageClient GetClientById(IntPtr id)
 		{
-			MessageClient client;
-			openPipes.TryGetValue(id, out client);
+			openPipes.TryGetValue(id, out var client);
 			return client;
 		}
 

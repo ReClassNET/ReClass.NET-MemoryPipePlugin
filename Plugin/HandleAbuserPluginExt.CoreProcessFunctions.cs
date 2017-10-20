@@ -210,7 +210,7 @@ namespace MemoryPipePlugin
 			foreach (var pipe in GetPipes())
 			{
 				var platform = new DirectoryInfo(pipe).Parent?.Name ?? string.Empty;
-#if WIN64
+#if RECLASSNET64
 				if (platform.ToLower() == "x64")
 #else
 				if (platform.ToLower() == "x86")

@@ -2,7 +2,6 @@
 using System.Diagnostics.Contracts;
 using System.IO;
 using ReClassNET.Memory;
-using ReClassNET.Util;
 
 namespace MemoryPipePlugin
 {

@@ -52,8 +52,7 @@ namespace MemoryPipePlugin
 				{
 					var type = (MessageType)br.ReadInt32();
 
-					Func<IMessage> createFn;
-					if (registeredMessages.TryGetValue(type, out createFn))
+					if (registeredMessages.TryGetValue(type, out var createFn))
 					{
 						var message = createFn();
 						message.ReadFrom(br);
