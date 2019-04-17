@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <algorithm>
 #include <functional>
+#include <string>
 
 #include "ReClassNET_Plugin.hpp"
 
