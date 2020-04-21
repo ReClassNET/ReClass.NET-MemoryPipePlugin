@@ -10,7 +10,7 @@ namespace MemoryPipePlugin
 		{
 			Contract.Requires(br != null);
 
-#if WIN64
+#if RECLASSNET64
 			return (IntPtr)br.ReadInt64();
 #else
 			return (IntPtr)br.ReadInt32();
@@ -21,7 +21,7 @@ namespace MemoryPipePlugin
 		{
 			Contract.Requires(bw != null);
 
-#if WIN64
+#if RECLASSNET64
 			bw.Write(value.ToInt64());
 #else
 			bw.Write(value.ToInt32());
